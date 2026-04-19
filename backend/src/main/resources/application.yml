@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: pokemontcg
+  profiles:
+    active: dev
+  jpa:
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+
+pokemontcg:
+  api:
+    base-url: https://api.pokemontcg.io/v2
+    set: xy1
+    timeout-ms: 10000

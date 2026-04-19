@@ -34,7 +34,6 @@ yarn-error.log*
 
 # ===== Build artifacts =====
 *.zip
-!docs.zip
 
 # ===== Test / coverage =====
 jacoco.exec
