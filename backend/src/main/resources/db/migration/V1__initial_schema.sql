@@ -18,10 +18,10 @@ CREATE TABLE cards (
     number          VARCHAR(16)  NOT NULL,
     name            VARCHAR(128) NOT NULL,
     supertype       VARCHAR(32)  NOT NULL,     -- Pokemon | Trainer | Energy
-    subtypes        TEXT[]       NOT NULL DEFAULT '{}',
+    subtypes        JSONB        NOT NULL DEFAULT '[]',
     hp              INTEGER,
-    types           TEXT[]       NOT NULL DEFAULT '{}',
-    retreat_cost    TEXT[]       NOT NULL DEFAULT '{}',
+    types           JSONB        NOT NULL DEFAULT '[]',
+    retreat_cost    JSONB        NOT NULL DEFAULT '[]',
     weaknesses      JSONB,
     resistances     JSONB,
     attacks         JSONB,
