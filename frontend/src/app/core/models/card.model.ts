@@ -31,6 +31,7 @@ export interface Card {
   weaknesses: Weakness[] | null;
   resistances: Resistance[] | null;
   attacks: Attack[] | null;
+  rules: string[] | null;
   evolvesFrom: string | null;
   imageSmall: string | null;
   imageLarge: string | null;

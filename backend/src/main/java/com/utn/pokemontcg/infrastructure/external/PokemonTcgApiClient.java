@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -29,8 +30,13 @@ public class PokemonTcgApiClient {
             @Value("${pokemontcg.api.timeout-ms}") int timeoutMs,
             @Value("${POKEMONTCG_API_KEY:}") String apiKey) {
 
+        var factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(timeoutMs);
+        factory.setReadTimeout(timeoutMs);
+
         var builder = RestClient.builder()
                 .baseUrl(baseUrl)
+                .requestFactory(factory)
                 .requestInterceptor((req, body, exec) -> {
                     req.getHeaders().add(HttpHeaders.ACCEPT, "application/json");
                     if (apiKey != null && !apiKey.isBlank()) {

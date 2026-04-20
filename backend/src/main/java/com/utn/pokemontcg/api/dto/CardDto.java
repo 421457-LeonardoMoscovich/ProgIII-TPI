@@ -18,6 +18,7 @@ public record CardDto(
         JsonNode weaknesses,
         JsonNode resistances,
         JsonNode attacks,
+        JsonNode rules,
         String evolvesFrom,
         String imageSmall,
         String imageLarge
@@ -26,7 +27,7 @@ public record CardDto(
         return new CardDto(
                 c.getId(), c.getSetCode(), c.getNumber(), c.getName(), c.getSupertype(),
                 c.getSubtypes(), c.getHp(), c.getTypes(), c.getRetreatCost(),
-                c.getWeaknesses(), c.getResistances(), c.getAttacks(),
+                c.getWeaknesses(), c.getResistances(), c.getAttacks(), c.getRules(),
                 c.getEvolvesFrom(), c.getImageSmall(), c.getImageLarge());
     }
 }
