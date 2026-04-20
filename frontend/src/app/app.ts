@@ -12,7 +12,7 @@ import { Card } from './core/models/card.model';
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
-export class App {
+export class AppComponent {
   private cards = inject(CardService);
 
   protected readonly title = signal('Pokémon TCG — xy1 smoke');

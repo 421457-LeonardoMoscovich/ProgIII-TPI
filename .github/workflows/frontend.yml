@@ -30,7 +30,9 @@ jobs:
 
       - run: npm ci
 
+      - run: npm run lint
+
       - run: npm run build -- --configuration=production
 
-      - name: Test (headless)
-        run: npm test -- --watch=false --browsers=ChromeHeadless --no-progress
+      - name: Test (Vitest)
+        run: npm test
