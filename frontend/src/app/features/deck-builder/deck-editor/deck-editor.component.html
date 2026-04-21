@@ -1,0 +1,96 @@
+<div class="editor-layout">
+
+  @if (loading()) {
+    <p class="loading">Cargando...</p>
+  } @else {
+
+    <!-- Header -->
+    <header class="editor-header">
+      <button class="btn-secondary" (click)="back()">← Volver</button>
+      <h1>{{ deck()?.name }}</h1>
+      <div class="header-actions">
+        <span class="total-count" [class.complete]="totalCards() === 60" [class.over]="totalCards() > 60">
+          {{ totalCards() }}/60
+        </span>
+        @if (validation()) {
+          <span class="validation-badge" [class.valid]="validation()!.valid">
+            {{ validation()!.valid ? '✓ Válido' : '✗ Inválido' }}
+          </span>
+        }
+        <button class="btn-secondary" (click)="validate()">Validar</button>
+        <button class="btn-primary" (click)="save()" [disabled]="saving()">
+          {{ saving() ? 'Guardando...' : 'Guardar' }}
+        </button>
+      </div>
+    </header>
+
+    @if (error()) { <p class="error">{{ error() }}</p> }
+
+    @if (validation() && !validation()!.valid) {
+      <ul class="validation-errors">
+        @for (err of validation()!.errors; track err) {
+          <li>{{ err }}</li>
+        }
+      </ul>
+    }
+
+    <div class="editor-body">
+
+      <!-- Left: card search -->
+      <aside class="card-search">
+        <form [formGroup]="filterForm" class="filters">
+          <input formControlName="name" type="text" placeholder="Buscar por nombre..." />
+          <select formControlName="supertype">
+            <option value="">Todos los tipos</option>
+            @for (st of supertypes; track st) {
+              <option [value]="st">{{ st }}</option>
+            }
+          </select>
+          <input formControlName="subtype" type="text" placeholder="Subtipo..." />
+        </form>
+
+        <div class="card-grid">
+          @for (card of filteredCards(); track card.id) {
+            <div class="card-item" (click)="add(card)">
+              <app-card-preview
+                [card]="card"
+                [quantity]="quantityOf(card.id)"
+                [maxQuantity]="4"
+              />
+            </div>
+          }
+          @if (filteredCards().length === 0) {
+            <p class="empty">Sin resultados</p>
+          }
+        </div>
+      </aside>
+
+      <!-- Right: deck contents -->
+      <section class="deck-contents">
+        <h2>Mazo <span class="count">{{ totalCards() }}/60</span></h2>
+
+        @if (deckCardList().length === 0) {
+          <p class="empty">Hacé clic en una carta para agregarla</p>
+        } @else {
+          <ul class="deck-list">
+            @for (entry of deckCardList(); track entry.card.id) {
+              <li class="deck-entry">
+                <span class="entry-qty">{{ entry.qty }}×</span>
+                @if (entry.card.imageSmall) {
+                  <img [src]="entry.card.imageSmall" [alt]="entry.card.name" width="40" height="56" loading="lazy" />
+                }
+                <span class="entry-name">{{ entry.card.name }}</span>
+                <div class="entry-controls">
+                  <button (click)="remove(entry.card.id)">−</button>
+                  <button (click)="add(entry.card)">+</button>
+                </div>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+
+    </div>
+  }
+
+</div>

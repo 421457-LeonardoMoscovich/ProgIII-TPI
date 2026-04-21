@@ -13,11 +13,17 @@ export const routes: Routes = [
       import('./features/auth/register/register.component').then(m => m.RegisterComponent),
   },
   {
-    path: 'deck-builder',
+    path: 'decks',
     canActivate: [authGuard],
     loadComponent: () =>
-      import('./features/deck-builder/deck-builder.component').then(m => m.DeckBuilderComponent),
+      import('./features/deck-builder/deck-lobby/deck-lobby.component').then(m => m.DeckLobbyComponent),
   },
-  { path: '', redirectTo: '/deck-builder', pathMatch: 'full' },
+  {
+    path: 'decks/:id',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/deck-builder/deck-editor/deck-editor.component').then(m => m.DeckEditorComponent),
+  },
+  { path: '', redirectTo: '/decks', pathMatch: 'full' },
   { path: '**', redirectTo: '/login' },
 ];

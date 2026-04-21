@@ -1,0 +1,49 @@
+<div class="lobby-container">
+  <header class="lobby-header">
+    <h1>Mis Mazos</h1>
+    <button class="btn-primary" (click)="openCreate()">+ Nuevo Mazo</button>
+  </header>
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  @if (showCreateForm()) {
+    <div class="create-form">
+      <input
+        type="text"
+        placeholder="Nombre del mazo"
+        [value]="creatingName()"
+        (input)="updateName($event)"
+        (keyup.enter)="create()"
+        autofocus
+      />
+      <button class="btn-primary" (click)="create()" [disabled]="!creatingName().trim()">Crear</button>
+      <button class="btn-secondary" (click)="cancelCreate()">Cancelar</button>
+    </div>
+  }
+
+  @if (loading()) {
+    <p class="loading">Cargando mazos...</p>
+  } @else if (decks().length === 0) {
+    <p class="empty">No tenés mazos todavía. ¡Crea uno!</p>
+  } @else {
+    <div class="deck-grid">
+      @for (deck of decks(); track deck.id) {
+        <div class="deck-card" [class.valid]="deck.isValid" [class.invalid]="!deck.isValid">
+          <div class="deck-info" (click)="edit(deck.id)">
+            <h2>{{ deck.name }}</h2>
+            <span class="card-count">{{ cardCount(deck) }}/60 cartas</span>
+            <span class="validity-badge" [class.valid]="deck.isValid">
+              {{ deck.isValid ? '✓ Válido' : '✗ Inválido' }}
+            </span>
+          </div>
+          <div class="deck-actions">
+            <button class="btn-secondary" (click)="edit(deck.id)">Editar</button>
+            <button class="btn-danger" (click)="delete(deck.id)">Eliminar</button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

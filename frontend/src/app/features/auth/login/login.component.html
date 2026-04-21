@@ -1,0 +1,18 @@
+<div class="auth-container">
+  <h1>Iniciar Sesión</h1>
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <div class="field">
+      <label>Usuario</label>
+      <input formControlName="username" type="text" placeholder="tu_usuario" />
+    </div>
+    <div class="field">
+      <label>Contraseña</label>
+      <input formControlName="password" type="password" placeholder="••••••••" />
+    </div>
+    @if (error) {
+      <p class="error">{{ error }}</p>
+    }
+    <button type="submit" [disabled]="form.invalid">Entrar</button>
+  </form>
+  <p>¿No tenés cuenta? <a routerLink="/register">Registrate</a></p>
+</div>

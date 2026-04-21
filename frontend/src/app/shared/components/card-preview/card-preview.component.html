@@ -1,0 +1,33 @@
+<div class="card-preview" [attr.title]="card().name">
+  <div class="card-image-wrap">
+    @if (card().imageSmall) {
+      <img
+        [src]="card().imageSmall!"
+        [alt]="card().name"
+        loading="lazy"
+        width="146"
+        height="204"
+      />
+    } @else {
+      <div class="card-placeholder">{{ card().name }}</div>
+    }
+    @if (quantity() > 0) {
+      <span class="qty-badge">{{ quantity() }}/{{ maxQuantity() }}</span>
+    }
+  </div>
+  <div class="card-tooltip">
+    <p class="card-name">{{ card().name }}</p>
+    <p class="card-type">{{ card().supertype }}@if (card().subtypes.length) { — {{ card().subtypes.join(', ') }} }</p>
+    @if (card().hp) { <p>HP: {{ card().hp }}</p> }
+    @if (card().attacks?.length) {
+      <ul class="attacks">
+        @for (atk of card().attacks!; track atk.name) {
+          <li>{{ atk.name }}@if (atk.damage) { — {{ atk.damage }} }</li>
+        }
+      </ul>
+    }
+    @if (card().weaknesses?.length) {
+      <p>Debilidad: {{ card().weaknesses![0].type }} {{ card().weaknesses![0].value }}</p>
+    }
+  </div>
+</div>
