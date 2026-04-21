@@ -107,6 +107,11 @@
 		     Deferred: Docker Desktop 29 / Moby API v1.52 incompatible with
 		     testcontainers-java 1.21. Re-add once TC 1.22 lands or switch
 		     to @DataJpaTest with an H2 profile that skips JSONB columns. -->
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
