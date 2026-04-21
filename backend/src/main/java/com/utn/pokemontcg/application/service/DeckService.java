@@ -33,6 +33,7 @@ public class DeckService {
         this.cardRepo = cardRepo;
     }
 
+    @Transactional(readOnly = true)
     public List<DeckDto> listForUser(String username) {
         var user = requireUser(username);
         return deckRepo.findByUserIdOrderByCreatedAtDesc(user.getId())

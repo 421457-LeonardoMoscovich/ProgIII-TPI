@@ -12,6 +12,6 @@ public interface DeckRepository extends JpaRepository<Deck, Long> {
 
     List<Deck> findByUserIdOrderByCreatedAtDesc(Long userId);
 
-    @Query("SELECT d FROM Deck d JOIN FETCH d.cards dc JOIN FETCH dc.card WHERE d.id = :id")
+    @Query("SELECT d FROM Deck d LEFT JOIN FETCH d.cards dc LEFT JOIN FETCH dc.card WHERE d.id = :id")
     Optional<Deck> findByIdWithCards(@Param("id") Long id);
 }

@@ -5,6 +5,7 @@ import com.utn.pokemontcg.api.dto.AuthResponse;
 import com.utn.pokemontcg.config.JwtUtil;
 import com.utn.pokemontcg.domain.model.User;
 import com.utn.pokemontcg.infrastructure.persistence.UserRepository;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +29,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
+    @Operation(summary = "Registra un nuevo usuario", description = "Crea cuenta y devuelve JWT. Falla con 409 si username o email ya existen.")
     public AuthResponse register(@RequestBody AuthRequest req) {
         if (userRepo.existsByUsername(req.username())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Username ya existe");
@@ -41,6 +43,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
+    @Operation(summary = "Inicia sesión", description = "Devuelve JWT si las credenciales son correctas. Solo requiere username y password.")
     public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest req) {
         return userRepo.findByUsername(req.username())
                 .filter(u -> encoder.matches(req.password(), u.getPasswordHash()))
