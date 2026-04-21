@@ -14,6 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class StatusEffectManagerTest {
 
+    private static final int BURN_POISON_DAMAGE = 10;
     private StatusEffectManager manager;
     private PokemonInPlay pokemon;
 
@@ -91,7 +92,7 @@ class StatusEffectManagerTest {
     void processBetweenTurns_quemado_deals10Damage() {
         manager.apply(pokemon, StatusCondition.QUEMADO);
         manager.processBetweenTurns(pokemon, new Random());
-        assertEquals(10, pokemon.getDamage());
+        assertEquals(BURN_POISON_DAMAGE, pokemon.getDamage());
         // burn condition remains
         assertTrue(pokemon.isBurned());
     }
@@ -102,7 +103,7 @@ class StatusEffectManagerTest {
     void processBetweenTurns_envenenado_deals10Damage() {
         manager.apply(pokemon, StatusCondition.ENVENENADO);
         manager.processBetweenTurns(pokemon, new Random());
-        assertEquals(10, pokemon.getDamage());
+        assertEquals(BURN_POISON_DAMAGE, pokemon.getDamage());
         // poison condition remains
         assertTrue(pokemon.isPoisoned());
     }

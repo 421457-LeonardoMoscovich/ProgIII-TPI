@@ -28,7 +28,7 @@ public class StatusEffectManager {
      */
     public void apply(PokemonInPlay pokemon, StatusCondition condition) {
         switch (condition) {
-            case DORMIDO, CONFUNDIDO, PARALIZADO -> {
+            case DORMIDO, CONFUNDIDO, PARALIZADO, NONE -> {
                 // Primary status: mutually exclusive — clear any previous primary and secondary flags
                 pokemon.setPrimaryStatus(condition);
                 pokemon.setBurned(false);
@@ -45,11 +45,6 @@ public class StatusEffectManager {
                 pokemon.setPrimaryStatus(StatusCondition.NONE);
                 pokemon.setPoisoned(true);
                 pokemon.setBurned(false);
-            }
-            case NONE -> {
-                pokemon.setPrimaryStatus(StatusCondition.NONE);
-                pokemon.setBurned(false);
-                pokemon.setPoisoned(false);
             }
         }
     }
@@ -89,7 +84,6 @@ public class StatusEffectManager {
                 pokemon.setPrimaryStatus(StatusCondition.NONE);
             }
             case NONE -> { /* no-op */ }
-            default -> { /* QUEMADO/ENVENENADO won't appear here — handled below */ }
         }
 
         // Process burn
