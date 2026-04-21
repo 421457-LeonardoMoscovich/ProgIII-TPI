@@ -154,6 +154,30 @@ class RuleValidatorTest {
         assertThat(result.valid()).isTrue();
     }
 
+    @Test
+    void attack_blockedWhenNoActivePokemon() {
+        state.swapTurn();
+        state.swapTurn();
+        // active pokemon is null (not set)
+
+        var action = new GameAction.Attack(1L, 0);
+        var result = validator.validate(action, state);
+
+        assertThat(result.valid()).isFalse();
+        assertThat(result.reason()).containsIgnoringCase("no active");
+    }
+
+    @Test
+    void retreat_blockedWhenNoActivePokemon() {
+        // active pokemon is null (not set)
+
+        var action = new GameAction.Retreat(1L, List.of());
+        var result = validator.validate(action, state);
+
+        assertThat(result.valid()).isFalse();
+        assertThat(result.reason()).containsIgnoringCase("no active");
+    }
+
     // ── Retreat tests ─────────────────────────────────────────────────────────
 
     @Test

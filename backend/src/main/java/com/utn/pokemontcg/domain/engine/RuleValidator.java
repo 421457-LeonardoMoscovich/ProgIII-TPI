@@ -10,6 +10,8 @@ import com.utn.pokemontcg.domain.engine.model.*;
  */
 public class RuleValidator {
 
+    private static final int MAX_BENCH_SIZE = 5;
+
     // ── Public API ────────────────────────────────────────────────────────────
 
     public ValidationResult validate(GameAction action, GameState state) {
@@ -50,13 +52,8 @@ public class RuleValidator {
             return ValidationResult.fail("Cannot attack on the first turn.");
         }
 
-        if (active.getPrimaryStatus() == StatusCondition.PARALIZADO) {
-            return ValidationResult.fail("Active Pokémon is paralizado and cannot attack.");
-        }
-
-        if (active.getPrimaryStatus() == StatusCondition.DORMIDO) {
-            return ValidationResult.fail("Active Pokémon is dormido and cannot attack.");
-        }
+        ValidationResult statusCheck = checkParalyzedOrAsleep(active);
+        if (!statusCheck.valid()) return statusCheck;
 
         if (state.getTurnFlags().isAttackDoneThisTurn()) {
             return ValidationResult.fail("Already attacked this turn.");
@@ -73,13 +70,8 @@ public class RuleValidator {
             return ValidationResult.fail("No active Pokémon to retreat.");
         }
 
-        if (active.getPrimaryStatus() == StatusCondition.PARALIZADO) {
-            return ValidationResult.fail("Active Pokémon is paralizado and cannot retreat.");
-        }
-
-        if (active.getPrimaryStatus() == StatusCondition.DORMIDO) {
-            return ValidationResult.fail("Active Pokémon is dormido and cannot retreat.");
-        }
+        ValidationResult statusCheck = checkParalyzedOrAsleep(active);
+        if (!statusCheck.valid()) return statusCheck;
 
         if (state.getTurnFlags().isRetreatedThisTurn()) {
             return ValidationResult.fail("Already retreated this turn.");
@@ -114,7 +106,10 @@ public class RuleValidator {
 
         // Target cannot have been placed this turn
         PokemonInPlay target = findPokemonInPlay(action.targetInPlayId(), current);
-        if (target != null && target.isJustPlaced()) {
+        if (target == null) {
+            return ValidationResult.fail("Target Pokémon not found in play.");
+        }
+        if (target.isJustPlaced()) {
             return ValidationResult.fail("Cannot evolve a Pokémon that was just placed this turn.");
         }
 
@@ -132,8 +127,8 @@ public class RuleValidator {
         }
 
         // Bench must not be full (max 5)
-        if (action.toBench() && current.getBench().size() >= 5) {
-            return ValidationResult.fail("Bench is full — cannot place more than 5 Pokémon on bench.");
+        if (action.toBench() && current.getBench().size() >= MAX_BENCH_SIZE) {
+            return ValidationResult.fail("Bench is full — cannot place more than " + MAX_BENCH_SIZE + " Pokémon on bench.");
         }
 
         return ValidationResult.ok();
@@ -148,6 +143,18 @@ public class RuleValidator {
             return ValidationResult.fail("Trainer card is not in hand.");
         }
 
+        return ValidationResult.ok();
+    }
+
+    // ── Private helpers ───────────────────────────────────────────────────────
+
+    private ValidationResult checkParalyzedOrAsleep(PokemonInPlay pokemon) {
+        if (pokemon.getPrimaryStatus() == StatusCondition.PARALIZADO) {
+            return ValidationResult.fail("Active Pokémon is paralizado and cannot act.");
+        }
+        if (pokemon.getPrimaryStatus() == StatusCondition.DORMIDO) {
+            return ValidationResult.fail("Active Pokémon is dormido and cannot act.");
+        }
         return ValidationResult.ok();
     }
 
