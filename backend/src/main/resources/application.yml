@@ -33,3 +33,8 @@ pokemontcg:
     base-url: https://api.pokemontcg.io/v2
     set: xy1
     timeout-ms: 10000
+
+app:
+  jwt:
+    secret: "dev-secret-key-must-be-at-least-256-bits-long-for-hs256-algorithm"
+    expiration-ms: 86400000
