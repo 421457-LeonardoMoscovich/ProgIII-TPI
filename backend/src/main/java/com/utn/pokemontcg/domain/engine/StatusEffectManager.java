@@ -29,10 +29,10 @@ public class StatusEffectManager {
     public void apply(PokemonInPlay pokemon, StatusCondition condition) {
         switch (condition) {
             case DORMIDO, CONFUNDIDO, PARALIZADO -> {
-                // Primary status: mutually exclusive — clear any previous primary and flags
+                // Primary status: mutually exclusive — clear any previous primary and secondary flags
                 pokemon.setPrimaryStatus(condition);
-                // Applying a primary status does not clear burn/poison (they can coexist
-                // per the official rules, but mutual exclusion applies only within primary statuses)
+                pokemon.setBurned(false);
+                pokemon.setPoisoned(false);
             }
             case QUEMADO -> {
                 // Replace any existing primary status with NONE, set burn flag

@@ -125,4 +125,20 @@ class StatusEffectManagerTest {
         manager.apply(pokemon, StatusCondition.CONFUNDIDO);
         assertEquals(StatusCondition.CONFUNDIDO, pokemon.getPrimaryStatus());
     }
+
+    // ─── Test 10: apply primary status clears burned flag (mutual exclusion) ──
+
+    @Test
+    void apply_dormido_whenAlreadyBurned_clearsBurnedFlag() {
+        // Pre-condition: Pokémon is burned
+        pokemon.setBurned(true);
+        assertTrue(pokemon.isBurned());
+
+        // Applying a primary status must clear burned (mutual exclusion)
+        manager.apply(pokemon, StatusCondition.DORMIDO);
+
+        assertEquals(StatusCondition.DORMIDO, pokemon.getPrimaryStatus());
+        assertFalse(pokemon.isBurned(), "burned must be cleared when a primary status is applied");
+        assertFalse(pokemon.isPoisoned(), "poisoned must also be cleared when a primary status is applied");
+    }
 }
