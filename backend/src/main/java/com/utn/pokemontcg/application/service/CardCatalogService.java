@@ -42,6 +42,10 @@ public class CardCatalogService {
         return repo.findBySetCodeOrderByNumberAsc(setCode);
     }
 
+    public List<Card> search(String name, String supertype, String subtypeJson) {
+        return repo.search(name, supertype, subtypeJson);
+    }
+
     @Transactional
     public int bootstrapCache() {
         long existing = repo.countBySetCode(setId);

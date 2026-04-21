@@ -27,4 +27,15 @@ public class CardController {
     public List<CardDto> list(@RequestParam(defaultValue = "xy1") String set) {
         return service.findBySet(set).stream().map(CardDto::from).toList();
     }
+
+    @GetMapping("/search")
+    @Operation(summary = "Busca cartas por nombre, supertipo y/o subtipo")
+    public List<CardDto> search(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String supertype,
+            @RequestParam(required = false) String subtype) {
+        String subtypeJson = subtype != null ? "[\"" + subtype + "\"]" : null;
+        return service.search(name, supertype, subtypeJson).stream()
+                .map(CardDto::from).toList();
+    }
 }
