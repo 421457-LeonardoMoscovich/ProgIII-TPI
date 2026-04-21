@@ -12,4 +12,8 @@ export class CardService {
   list(set = 'xy1'): Observable<Card[]> {
     return this.http.get<Card[]>(this.base, { params: { set } });
   }
+
+  search(params: { name?: string; supertype?: string; subtype?: string }): Observable<Card[]> {
+    return this.http.get<Card[]>(`${this.base}/search`, { params: params as Record<string, string> });
+  }
 }
