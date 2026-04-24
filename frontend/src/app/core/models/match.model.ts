@@ -31,7 +31,7 @@ export interface FieldPokemon {
   maxHp: number;
   energies: Record<string, number>;
   statusCondition: string | null;
-  attacks: Array<{ name: string; damage: number }>;
+  attacks: Array<{ name: string; damage: string }>;
 }
 
 // Filtered state DTO from GET /api/matches/{id}/state
