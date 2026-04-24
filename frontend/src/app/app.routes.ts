@@ -24,6 +24,18 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/deck-builder/deck-editor/deck-editor.component').then(m => m.DeckEditorComponent),
   },
-  { path: '', redirectTo: '/decks', pathMatch: 'full' },
+  {
+    path: 'lobby',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/lobby/lobby.component').then(m => m.LobbyComponent),
+  },
+  {
+    path: 'match/:id',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/match/match.component').then(m => m.MatchComponent),
+  },
+  { path: '', redirectTo: '/lobby', pathMatch: 'full' },
   { path: '**', redirectTo: '/login' },
 ];
