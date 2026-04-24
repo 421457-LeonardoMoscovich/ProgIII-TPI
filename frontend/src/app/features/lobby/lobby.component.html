@@ -1,0 +1,137 @@
+<div class="game-shell">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <span class="brand-icon">⚡</span>
+      <span class="brand-name">PokéTCG</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item active">
+        <span class="nav-icon">🎮</span> Jugar
+      </a>
+      <a class="nav-item" [routerLink]="['/decks']">
+        <span class="nav-icon">📦</span> Mis Mazos
+      </a>
+    </nav>
+    <div class="sidebar-user">
+      <div class="user-avatar">{{ (currentUser ?? 'U')[0].toUpperCase() }}</div>
+      <div class="user-info">
+        <span class="user-name">{{ currentUser ?? 'Jugador' }}</span>
+        <button class="btn-logout" (click)="logout()">Salir</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main-area">
+
+    @if (error()) {
+      <div class="alert-error">{{ error() }}</div>
+    }
+
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-content">
+        <h1 class="hero-title">Sala de Partidas</h1>
+        <p class="hero-sub">
+          <span class="live-dot"></span>
+          {{ waitingMatches.length }} esperando · {{ activeMatches.length }} en juego
+        </p>
+      </div>
+      <button class="btn-game-primary" (click)="openCreate()" [disabled]="decks().length === 0">
+        + Crear Partida
+      </button>
+    </section>
+
+    @if (loading()) {
+      <p class="loading-text">Cargando partidas...</p>
+    } @else {
+
+      <!-- Waiting -->
+      @if (waitingMatches.length > 0) {
+        <section class="match-section">
+          <h2 class="section-title"><span class="badge badge-wait">ESPERANDO</span></h2>
+          <div class="match-grid">
+            @for (m of waitingMatches; track m.id) {
+              <div class="match-card match-card--wait">
+                <div class="match-host">{{ m.player1Username }}</div>
+                <div class="match-meta">Partida #{{ m.id }}</div>
+                <button class="btn-game-join" (click)="openJoin(m.id)" [disabled]="decks().length === 0">
+                  Unirse →
+                </button>
+              </div>
+            }
+          </div>
+        </section>
+      }
+
+      <!-- Active -->
+      @if (activeMatches.length > 0) {
+        <section class="match-section">
+          <h2 class="section-title"><span class="badge badge-active">EN JUEGO</span></h2>
+          <div class="match-grid">
+            @for (m of activeMatches; track m.id) {
+              <div class="match-card match-card--active">
+                <div class="match-host">{{ m.player1Username }} vs {{ m.player2Username }}</div>
+                <div class="match-meta">Turno {{ m.turnNumber }}</div>
+                <button class="btn-game-watch" (click)="watchMatch(m.id)">Observar</button>
+              </div>
+            }
+          </div>
+        </section>
+      }
+
+      @if (waitingMatches.length === 0 && activeMatches.length === 0) {
+        <p class="empty-state">No hay partidas activas. ¡Creá una!</p>
+      }
+    }
+
+    <!-- Polling note -->
+    <footer class="polling-note">
+      Actualizando cada 3s · WebSocket en Sprint 5
+    </footer>
+  </main>
+</div>
+
+<!-- Create Modal -->
+@if (showCreateModal()) {
+  <div class="modal-overlay" (click)="cancelCreate()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <h2 class="modal-title">Crear Partida</h2>
+      <label class="modal-label">Elegí tu mazo</label>
+      <select class="modal-select" (change)="selectDeck($event)">
+        @for (d of decks(); track d.id) {
+          <option [value]="d.id">{{ d.name }}</option>
+        }
+      </select>
+      <div class="modal-actions">
+        <button class="btn-game-primary" (click)="confirmCreate()" [disabled]="creating()">
+          {{ creating() ? 'Creando...' : 'Crear' }}
+        </button>
+        <button class="btn-game-secondary" (click)="cancelCreate()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Join Modal -->
+@if (showJoinModal()) {
+  <div class="modal-overlay" (click)="cancelJoin()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <h2 class="modal-title">Unirse a Partida</h2>
+      <label class="modal-label">Elegí tu mazo</label>
+      <select class="modal-select" (change)="selectDeck($event)">
+        @for (d of decks(); track d.id) {
+          <option [value]="d.id">{{ d.name }}</option>
+        }
+      </select>
+      <div class="modal-actions">
+        <button class="btn-game-primary" (click)="confirmJoin()" [disabled]="joining()">
+          {{ joining() ? 'Uniéndose...' : 'Unirse' }}
+        </button>
+        <button class="btn-game-secondary" (click)="cancelJoin()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+}
