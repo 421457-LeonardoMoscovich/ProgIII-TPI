@@ -13,3 +13,43 @@ export interface Match {
   startedAt: string | null;
   finishedAt: string | null;
 }
+
+// Used by GET /api/matches (lobby list)
+export interface MatchSummary {
+  id: number;
+  status: MatchStatus;
+  player1Username: string;
+  player2Username: string | null;
+  createdAt: string;
+  turnNumber: number;
+}
+
+// A single Pokémon on the field (filtered DTO from server)
+export interface FieldPokemon {
+  name: string;
+  hp: number;
+  maxHp: number;
+  energies: Record<string, number>;
+  statusCondition: string | null;
+  attacks: Array<{ name: string; damage: number }>;
+}
+
+// Filtered state DTO from GET /api/matches/{id}/state
+export interface FilteredGameStateDto {
+  matchId: number;
+  turnNumber: number;
+  currentPlayerId: number;
+  phase: 'DRAW' | 'MAIN' | 'ATTACK' | 'BETWEEN_TURNS';
+  myPrizesLeft: number;
+  opponentPrizesLeft: number;
+  myHandCount: number;
+  opponentHandCount: number;
+  myDeckCount: number;
+  opponentDeckCount: number;
+  myActive: FieldPokemon | null;
+  opponentActive: FieldPokemon | null;
+  myBench: FieldPokemon[];
+  opponentBench: FieldPokemon[];
+  myHand: Array<{ id: string; name: string; type: string; supertype: string }>;
+  winner: string | null;
+}
