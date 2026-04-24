@@ -1,0 +1,150 @@
+<!-- frontend/src/app/features/match/match.component.html -->
+<div class="board-shell">
+
+  <!-- Top bar -->
+  <header class="board-topbar">
+    <button class="btn-back" (click)="goLobby()">← Lobby</button>
+    <span class="board-title">Partida #{{ matchId() }}</span>
+    @if (state()) {
+      <span class="phase-badge">Turno {{ state()!.turnNumber }} · {{ state()!.phase }}</span>
+    }
+  </header>
+
+  @if (error()) {
+    <div class="alert-error">{{ error() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="loading-center">Cargando partida...</div>
+  } @else if (state()) {
+
+    @let s = state()!;
+
+    <!-- Victory banner -->
+    @if (s.winner) {
+      <div class="winner-banner">
+        🏆 {{ s.winner === currentUser ? '¡Ganaste!' : s.winner + ' ganó la partida' }}
+      </div>
+    }
+
+    <div class="board-field">
+
+      <!-- ── Opponent half (top) ── -->
+      <section class="field-half field-opponent">
+        <div class="field-stats">
+          <span class="stat-pill">Premios: {{ s.opponentPrizesLeft }}</span>
+          <span class="stat-pill">Mano: {{ s.opponentHandCount }} cartas</span>
+          <span class="stat-pill">Mazo: {{ s.opponentDeckCount }}</span>
+        </div>
+
+        <!-- Opponent bench -->
+        <div class="bench-row bench-row--opponent">
+          @for (p of s.opponentBench; track p.name; let i = $index) {
+            <div class="bench-slot">
+              <div class="pokemon-card pokemon-card--bench">
+                <div class="pokemon-name">{{ p.name }}</div>
+                <div class="hp-bar">
+                  <div class="hp-fill" [class]="hpClass(p)" [style.width.%]="hpPercent(p)"></div>
+                </div>
+                <div class="pokemon-hp">{{ p.hp }}/{{ p.maxHp }}</div>
+              </div>
+            </div>
+          }
+          @for (_ of [].constructor(5 - s.opponentBench.length); track $index) {
+            <div class="bench-slot bench-slot--empty"></div>
+          }
+        </div>
+
+        <!-- Opponent active -->
+        <div class="active-zone">
+          @if (s.opponentActive) {
+            <div class="pokemon-card pokemon-card--active">
+              <div class="pokemon-name">{{ s.opponentActive.name }}</div>
+              @if (s.opponentActive.statusCondition) {
+                <span class="status-badge">{{ s.opponentActive.statusCondition }}</span>
+              }
+              <div class="hp-bar">
+                <div class="hp-fill" [class]="hpClass(s.opponentActive)" [style.width.%]="hpPercent(s.opponentActive)"></div>
+              </div>
+              <div class="pokemon-hp">{{ s.opponentActive.hp }}/{{ s.opponentActive.maxHp }}</div>
+            </div>
+          } @else {
+            <div class="active-empty">Sin Pokémon activo</div>
+          }
+        </div>
+      </section>
+
+      <!-- Divider -->
+      <div class="field-divider"></div>
+
+      <!-- ── Player half (bottom) ── -->
+      <section class="field-half field-player">
+
+        <!-- Player active -->
+        <div class="active-zone">
+          @if (s.myActive) {
+            <div class="pokemon-card pokemon-card--active pokemon-card--mine">
+              <div class="pokemon-name">{{ s.myActive.name }}</div>
+              @if (s.myActive.statusCondition) {
+                <span class="status-badge">{{ s.myActive.statusCondition }}</span>
+              }
+              <div class="hp-bar">
+                <div class="hp-fill" [class]="hpClass(s.myActive)" [style.width.%]="hpPercent(s.myActive)"></div>
+              </div>
+              <div class="pokemon-hp">{{ s.myActive.hp }}/{{ s.myActive.maxHp }}</div>
+              <div class="attack-list">
+                @for (atk of s.myActive.attacks; track atk.name) {
+                  <div class="attack-row">
+                    <span class="attack-name">{{ atk.name }}</span>
+                    <span class="attack-dmg">{{ atk.damage }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+          } @else {
+            <div class="active-empty">Sin Pokémon activo</div>
+          }
+        </div>
+
+        <!-- Player bench -->
+        <div class="bench-row bench-row--player">
+          @for (p of s.myBench; track p.name; let i = $index) {
+            <div class="bench-slot">
+              <div class="pokemon-card pokemon-card--bench pokemon-card--mine">
+                <div class="pokemon-name">{{ p.name }}</div>
+                <div class="hp-bar">
+                  <div class="hp-fill" [class]="hpClass(p)" [style.width.%]="hpPercent(p)"></div>
+                </div>
+                <div class="pokemon-hp">{{ p.hp }}/{{ p.maxHp }}</div>
+              </div>
+            </div>
+          }
+          @for (_ of [].constructor(5 - s.myBench.length); track $index) {
+            <div class="bench-slot bench-slot--empty"></div>
+          }
+        </div>
+
+        <div class="field-stats">
+          <span class="stat-pill stat-pill--mine">Premios: {{ s.myPrizesLeft }}</span>
+          <span class="stat-pill stat-pill--mine">Mazo: {{ s.myDeckCount }}</span>
+        </div>
+      </section>
+    </div>
+
+    <!-- Hand tray -->
+    <section class="hand-tray">
+      <div class="hand-label">Tu mano ({{ s.myHandCount }} cartas)</div>
+      <div class="hand-cards">
+        @for (card of s.myHand; track card.id) {
+          <div class="hand-card" [class]="'hand-card--' + card.supertype.toLowerCase()">
+            <div class="hand-card-name">{{ card.name }}</div>
+            <div class="hand-card-type">{{ card.type }}</div>
+          </div>
+        }
+      </div>
+    </section>
+
+  }
+
+  <footer class="polling-note">Actualizando cada 3s · WebSocket en Sprint 5</footer>
+</div>
