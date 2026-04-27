@@ -26,6 +26,12 @@ Documentación del plan de trabajo y arquitectura del TPI de Programación III (
 | RF-06 WebSockets | Spike Sprint 1, implementación Sprint 5 |
 | RNF-03 Cobertura | Sprint 3 (crítica) + Sprint 6 (global) |
 
+## Entrega Sprint 6
+
+- [Arquitectura](./arquitectura.md)
+- [Manual de despliegue](./manual-despliegue.md)
+- [Performance](./performance.md)
+
 ## Spec original
 El PDF autoritativo está en la raíz del repo: `TUP_3C_PIII_TPI_POKEMON_TCG.pdf`.
 Ante cualquier duda, prevalece el PDF sobre esta documentación.

@@ -1,121 +1,164 @@
-# Pokémon TCG — TPI Programación III
+# Pokemon TCG - TPI Programacion III
 
-Implementación full-stack del Pokémon Trading Card Game (ruleset **XY1**, 146 cartas del set `xy1` de pokemontcg.io v2).
+Implementacion full-stack del Pokemon Trading Card Game para el ruleset XY1. El backend mantiene el estado autoritativo de la partida y el frontend consume snapshots REST y eventos en tiempo real via STOMP/WebSocket.
 
-Spec autoritativa: [`TUP_3C_PIII_TPI_POKEMON_TCG.pdf`](./TUP_3C_PIII_TPI_POKEMON_TCG.pdf).
-Plan completo: [`docs/00-plan-general.md`](./docs/00-plan-general.md) y breakdowns por sprint en [`docs/sprints/`](./docs/sprints/).
+Spec autoritativa: [`TUP_3C_PIII_TPI_POKEMON_TCG.pdf`](./TUP_3C_PIII_TPI_POKEMON_TCG.pdf)  
+Plan del proyecto: [`docs/00-plan-general.md`](./docs/00-plan-general.md)  
+Breakdown por sprint: [`docs/sprints/`](./docs/sprints/)
+
+## Entrega tecnica
+
+- Arquitectura: [`docs/arquitectura.md`](./docs/arquitectura.md)
+- Despliegue: [`docs/manual-despliegue.md`](./docs/manual-despliegue.md)
+- Performance: [`docs/performance.md`](./docs/performance.md)
+- QA Sprint 5: [`docs/sprints/sprint-5-qa-acceptance.md`](./docs/sprints/sprint-5-qa-acceptance.md)
+- SQL: [`scripts/db/schema.sql`](./scripts/db/schema.sql) y [`scripts/db/seed.sql`](./scripts/db/seed.sql)
 
 ## Stack
 
-| Capa | Tech |
-|------|------|
-| Backend | Java 21, Spring Boot 3.5, Maven |
-| Frontend | Angular 21 (strict TypeScript, SCSS) |
-| DB | PostgreSQL 16 |
-| Real-time | Spring WebSockets (STOMP + SockJS) |
-| Tests | JUnit 5, Mockito, JaCoCo, Karma |
-| Docs API | springdoc-openapi / Swagger UI |
+| Capa | Tecnologia |
+| --- | --- |
+| Backend | Java 21, Spring Boot 3.5, Maven Wrapper |
+| Frontend | Angular 21, TypeScript strict, SCSS |
+| Base de datos | PostgreSQL 16 |
+| Tiempo real | Spring WebSocket, STOMP, SockJS |
+| Testing backend | JUnit 5, Mockito, JaCoCo |
+| Testing frontend | Vitest via `ng test`, ESLint |
+| API docs | springdoc-openapi, Swagger UI |
 
 ## Requisitos
 
-- Java 21 (Temurin recomendado)
-- Node.js 20+ y npm 10+
-- Docker Desktop (para Postgres)
-- Maven 3.9+ (o usar `./mvnw`)
+- Java 21
+- Node.js 20+ y npm
+- Docker Desktop / Docker Compose v2
 
-## Arranque rápido
+## Variables de entorno
+
+Base local: [`.env.example`](./.env.example)
+
+Variables principales:
+
+- `POSTGRES_DB`
+- `POSTGRES_USER`
+- `POSTGRES_PASSWORD`
+- `POSTGRES_PORT`
+- `DB_URL`
+- `DB_USER`
+- `DB_PASSWORD`
+- `POKEMONTCG_API_KEY` (opcional)
+
+Para despliegue productivo ver [`docs/manual-despliegue.md`](./docs/manual-despliegue.md).
+
+## Arranque local
+
+### 1. Base de datos
 
 ```bash
-# 1. Postgres
 cp .env.example .env
-./scripts/dev-up.sh      # docker compose up -d
+./scripts/dev-up.sh
+```
 
-# 2. Backend — http://localhost:8080
+### 2. Backend
+
+```bash
 cd backend
-./mvnw spring-boot:run   # aplica Flyway + bootstrapea caché xy1 en el primer arranque
+./mvnw spring-boot:run
+```
 
-# 3. Frontend — http://localhost:4200
+Backend disponible en `http://localhost:8080`.
+
+### 3. Frontend
+
+```bash
 cd frontend
 npm install
 npm start
 ```
 
-Endpoints útiles:
+Frontend disponible en `http://localhost:4200`.
 
-| URL | Descripción |
-|-----|-------------|
+## Endpoints utiles
+
+| URL | Descripcion |
+| --- | --- |
 | `http://localhost:8080/actuator/health` | Healthcheck |
-| `http://localhost:8080/swagger-ui.html` | API docs |
-| `http://localhost:8080/api/cards?set=xy1` | Catálogo cacheado |
-| `ws://localhost:8080/ws` | STOMP endpoint |
+| `http://localhost:8080/swagger-ui.html` | Swagger UI |
+| `http://localhost:8080/v3/api-docs` | OpenAPI JSON |
+| `http://localhost:8080/api/cards?set=xy1` | Catalogo cacheado |
+| `http://localhost:8080/ws` | Endpoint SockJS/STOMP |
 
-## Arquitectura (alto nivel)
+## Arquitectura
 
+```text
+Angular UI
+  | REST: auth, catalogo, deck builder, lobby, snapshots
+  | STOMP/SockJS: acciones y eventos de partida
+Spring Boot API
+  | api.controller
+  | api.ws
+application.service
+  | MatchSessionService
+  | DeckService
+  | CardCatalogService
+domain
+  | engine puro y agnostico al transporte
+  | reglas, acciones, eventos, validaciones
+infrastructure
+  | JPA repositories
+  | cliente pokemontcg.io
+PostgreSQL + Flyway
 ```
-┌────────────┐    HTTP/REST + STOMP/WS    ┌─────────────────────────┐
-│  Angular   │ ─────────────────────────► │  Spring Boot            │
-│  (browser) │ ◄───────────────────────── │  ├─ api (REST + WS)     │
-└────────────┘                            │  ├─ application          │
-                                          │  ├─ domain (engine) ★    │
-                                          │  └─ infrastructure       │
-                                          └──────────┬──────────────┘
-                                                     │ JPA + Flyway
-                                                     ▼
-                                          ┌─────────────────────────┐
-                                          │  PostgreSQL 16          │
-                                          │  + xy1 card cache       │
-                                          └─────────────────────────┘
-    ★ Engine es transport-agnostic.
-    ★ La API externa pokemontcg.io solo se consume en el bootstrap
-       del catálogo — NUNCA durante una partida.
-```
 
-Invariantes críticos (ver [`CLAUDE.md`](./CLAUDE.md)):
+Invariantes importantes:
 
-1. El backend es la única fuente de verdad del estado de partida.
-2. El Game Engine no conoce REST ni WebSockets.
-3. El estado oculto del oponente nunca se serializa al rival.
+1. El backend es la unica fuente de verdad del estado de partida.
+2. `domain.engine` no depende de REST, WebSocket ni JPA.
+3. La mano del rival nunca se serializa ni por REST ni por WS.
 
-## Comandos frecuentes
+## Comandos utiles
 
 ```bash
 # Backend
-./mvnw test                               # unit tests
-./mvnw verify                             # tests + JaCoCo
-./mvnw test -Dtest=RuleValidatorTest      # un test
-./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+cd backend
+./mvnw test
+./mvnw verify
+./mvnw test -Dtest=RuleValidatorTest
 
 # Frontend
-npm test                                  # karma + jasmine
+cd frontend
+npm test
 npm run lint
 npm run build
+
+# Deploy local tipo prod
+docker compose --env-file .env.prod -f config/docker-compose.prod.yml up --build -d
 ```
+
+## Cobertura y calidad
+
+- `./mvnw verify` ejecuta tests y gate de JaCoCo.
+- Cobertura global minima: 80%.
+- Cobertura minima para `RuleValidator`, `DamageCalculator` y `StatusEffectManager`: 90%.
+- Sprint 5 agrega cobertura de reconnect, hand masking y flujo realtime base.
 
 ## Estructura del repo
 
-```
+```text
 .
-├── backend/              Spring Boot app
-├── frontend/             Angular workspace
-├── docs/                 Plan general + sprints + decisiones
-├── scripts/              dev-up / dev-down
-├── docker-compose.yml    Postgres local
-└── .github/workflows/    CI (backend + frontend)
+|-- backend/
+|-- frontend/
+|-- docs/
+|-- scripts/
+|-- config/
+|-- docker-compose.yml
+`-- AGENTS.md
 ```
 
-## Sprints
+## Estado por sprint
 
-1. **Fundaciones** — scaffold + CI + xy1 cache + spike de WS ← _en curso_
-2. Deck Builder
-3. Game Engine (TDD-crítico)
-4. Partida & persistencia
-5. Tiempo real & UI
-6. Calidad & entrega
-
-## GitFlow
-
-- `main` — releases.
-- `develop` — integración.
-- `feature/<nombre>` — feature en curso (PR a `develop`).
-- `release/*`, `hotfix/*` según corresponda.
-- PRs requieren ≥1 review y CI verde.
+1. Sprint 1 - Fundaciones
+2. Sprint 2 - Deck Builder
+3. Sprint 3 - Game Engine
+4. Sprint 4 - Partida y persistencia
+5. Sprint 5 - Tiempo real y UI del tablero
+6. Sprint 6 - Calidad y entrega

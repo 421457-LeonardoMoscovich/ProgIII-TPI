@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { MatchSummary, FilteredGameStateDto } from '../models/match.model';
+import { MatchSummary, FilteredGameStateDto, MatchReconnectDto } from '../models/match.model';
 
 @Injectable({ providedIn: 'root' })
 export class MatchService {
@@ -23,5 +23,11 @@ export class MatchService {
 
   getState(matchId: number): Observable<FilteredGameStateDto> {
     return this.http.get<FilteredGameStateDto>(`${this.base}/${matchId}/state`);
+  }
+
+  reconnect(matchId: number, afterSequence: number): Observable<MatchReconnectDto> {
+    return this.http.get<MatchReconnectDto>(`${this.base}/${matchId}/reconnect`, {
+      params: { afterSequence },
+    });
   }
 }

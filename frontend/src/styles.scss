@@ -1,1 +1,666 @@
-/* You can add global styles to this file, and also import other style files */
+/* Global styles */
+
+app-match {
+  --bg: #060810;
+  --line: #223049;
+  --muted: #7c8aa3;
+  --text: #e5edf8;
+  --blue: #3b82f6;
+  --red: #e3350d;
+  background: var(--bg);
+  color: var(--text);
+  display: block;
+  font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+  height: 100vh;
+  overflow: hidden;
+}
+
+app-match button {
+  font: inherit;
+}
+
+app-match .board-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+}
+
+app-match .board-topbar {
+  align-items: center;
+  background: rgba(13, 17, 23, .94);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  gap: .7rem;
+  padding: .7rem 1rem;
+}
+
+app-match .btn-back,
+app-match .btn-link,
+app-match .btn-secondary {
+  background: transparent;
+  border: 1px solid #334155;
+  border-radius: 999px;
+  color: #b6c4d7;
+  cursor: pointer;
+  padding: .35rem .75rem;
+}
+
+app-match .btn-link {
+  border-color: #f59e0b;
+  color: #fde68a;
+}
+
+app-match .title-block {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: .15rem;
+  min-width: 8rem;
+}
+
+app-match .board-title {
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 900;
+  letter-spacing: .02em;
+}
+
+app-match .phase-badge,
+app-match .turn-pill,
+app-match .connection-pill,
+app-match .stat-pill {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: .73rem;
+  font-weight: 800;
+  padding: .23rem .58rem;
+  text-transform: uppercase;
+}
+
+app-match .turn-pill--mine,
+app-match .connection-pill--connected {
+  border-color: #14532d;
+  color: #86efac;
+}
+
+app-match .connection-pill--connecting,
+app-match .connection-pill--reconnecting {
+  border-color: #854d0e;
+  color: #facc15;
+}
+
+app-match .alert-error,
+app-match .winner-banner {
+  flex-shrink: 0;
+  padding: .6rem 1rem;
+  text-align: center;
+}
+
+app-match .alert-error {
+  background: #351818;
+  color: #fecaca;
+}
+
+app-match .winner-banner {
+  background: #123f27;
+  color: #bbf7d0;
+  font-weight: 900;
+}
+
+app-match .loading-center {
+  align-items: center;
+  color: var(--muted);
+  display: flex;
+  flex: 1;
+  justify-content: center;
+}
+
+app-match .toast-stack {
+  display: grid;
+  gap: .45rem;
+  position: fixed;
+  right: 1rem;
+  top: 4rem;
+  width: min(320px, calc(100vw - 2rem));
+  z-index: 5;
+}
+
+app-match .toast {
+  background: #0f172a;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--blue);
+  border-radius: 12px;
+  color: var(--text);
+  cursor: pointer;
+  padding: .7rem;
+  text-align: left;
+}
+
+app-match .toast--success {
+  border-left-color: #22c55e;
+}
+
+app-match .toast--warning {
+  border-left-color: #f59e0b;
+}
+
+app-match .toast--error {
+  border-left-color: #ef4444;
+}
+
+app-match .match-layout {
+  display: grid;
+  flex: 1;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  min-height: 0;
+}
+
+app-match .board-field {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+app-match .field-half {
+  align-items: center;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: .55rem;
+  justify-content: space-around;
+  padding: .7rem;
+}
+
+app-match .field-opponent {
+  background: rgba(8, 11, 20, .78);
+}
+
+app-match .field-player {
+  background: rgba(12, 17, 29, .9);
+}
+
+app-match .field-divider {
+  background: linear-gradient(90deg, transparent, #60a5fa, transparent);
+  height: 2px;
+}
+
+app-match .field-stats,
+app-match .bench-row,
+app-match .indicator-row,
+app-match .panel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .45rem;
+  justify-content: center;
+}
+
+app-match .stat-pill--mine {
+  border-color: #315f9c;
+  color: #bfdbfe;
+}
+
+app-match .bench-slot {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  width: 92px;
+}
+
+app-match .bench-slot--empty,
+app-match .active-empty {
+  align-items: center;
+  background: rgba(13, 17, 23, .72);
+  border: 1px dashed #31405b;
+  border-radius: 12px;
+  color: #526178;
+  display: flex;
+  font-size: .75rem;
+  justify-content: center;
+  text-align: center;
+}
+
+app-match .bench-slot--empty {
+  height: 88px;
+}
+
+app-match .active-empty {
+  height: 132px;
+  width: 150px;
+}
+
+app-match .active-zone {
+  display: flex;
+  justify-content: center;
+}
+
+app-match .active-zone--mine,
+app-match .bench-row--player {
+  border-radius: 14px;
+  min-height: 1rem;
+}
+
+app-match .active-zone--mine.cdk-drop-list-dragging,
+app-match .bench-row--player.cdk-drop-list-dragging {
+  outline: 1px dashed #60a5fa;
+  outline-offset: 6px;
+}
+
+app-match .pokemon-card {
+  background: #111827;
+  border: 1px solid #24334f;
+  border-radius: 12px;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: .34rem;
+  padding: .55rem;
+  text-align: left;
+}
+
+app-match .pokemon-card--active {
+  border-color: #3d5fa1;
+  min-height: 124px;
+  width: 150px;
+}
+
+app-match .pokemon-card--bench {
+  min-height: 88px;
+  width: 92px;
+}
+
+app-match .pokemon-card--mine {
+  background: #102341;
+  border-color: #2563eb;
+}
+
+app-match .card-select {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+}
+
+app-match .pokemon-name,
+app-match .hand-card-name {
+  color: #f8fafc;
+  font-size: .78rem;
+  font-weight: 900;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+app-match .energy-chip,
+app-match .status-badge,
+app-match .tool-chip,
+app-match .damage-chip {
+  background: #172033;
+  border: 1px solid #2c3b57;
+  border-radius: 999px;
+  color: #bae6fd;
+  font-size: .62rem;
+  font-weight: 800;
+  padding: .08rem .34rem;
+}
+
+app-match .damage-chip {
+  background: #2b1220;
+  border-color: #9f1239;
+  color: #fda4af;
+}
+
+app-match .status-badge {
+  background: #431407;
+  border-color: #9a3412;
+  color: #fed7aa;
+}
+
+app-match .tool-chip {
+  background: #17241b;
+  border-color: #166534;
+  color: #bbf7d0;
+}
+
+app-match .hp-bar {
+  background: #1f2937;
+  border-radius: 999px;
+  height: 6px;
+  overflow: hidden;
+}
+
+app-match .hp-fill {
+  height: 100%;
+  transition: width .25s ease;
+}
+
+app-match .hp-high {
+  background: #22c55e;
+}
+
+app-match .hp-mid {
+  background: #eab308;
+}
+
+app-match .hp-low {
+  background: #ef4444;
+}
+
+app-match .pokemon-hp,
+app-match .hand-card-type,
+app-match .turn-hint,
+app-match .target-hint,
+app-match .empty-panel,
+app-match .modal-note {
+  color: var(--muted);
+  font-size: .72rem;
+}
+
+app-match .attack-list {
+  display: grid;
+  gap: .28rem;
+  margin-top: .2rem;
+}
+
+app-match .attack-row {
+  align-items: center;
+  background: #0f172a;
+  border: 1px solid #26344d;
+  border-radius: 8px;
+  color: #cbd5e1;
+  cursor: pointer;
+  display: flex;
+  font-size: .7rem;
+  justify-content: space-between;
+  padding: .25rem .35rem;
+}
+
+app-match .attack-row:disabled,
+app-match .btn-action:disabled,
+app-match .btn-danger:disabled {
+  cursor: not-allowed;
+  opacity: .45;
+}
+
+app-match .attack-dmg {
+  color: #fb923c;
+  font-weight: 900;
+}
+
+app-match .side-panel {
+  background: rgba(6, 8, 16, .72);
+  border-left: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: .8rem;
+  overflow: auto;
+  padding: .85rem;
+}
+
+app-match .context-panel,
+app-match .action-log,
+app-match .attack-modal {
+  background: rgba(13, 17, 23, .92);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: .85rem;
+}
+
+app-match .panel-title {
+  color: #fff;
+  font-size: .82rem;
+  font-weight: 900;
+  letter-spacing: .06em;
+  margin-bottom: .55rem;
+  text-transform: uppercase;
+}
+
+app-match .selection-card,
+app-match .target-card,
+app-match .limit-grid {
+  background: #101827;
+  border: 1px solid #283854;
+  border-left: 4px solid var(--blue);
+  border-radius: 12px;
+  display: grid;
+  gap: .2rem;
+  margin: .7rem 0;
+  padding: .65rem;
+}
+
+app-match .selection-card--energy {
+  border-left-color: #22c55e;
+}
+
+app-match .selection-card--trainer {
+  border-left-color: var(--red);
+}
+
+app-match .selection-card small,
+app-match .target-card span {
+  color: var(--muted);
+  font-size: .72rem;
+}
+
+app-match .limit-grid {
+  grid-template-columns: repeat(2, 1fr);
+  margin: .65rem 0;
+}
+
+app-match .limit-grid span {
+  border: 1px solid #1f5134;
+  border-radius: 999px;
+  color: #86efac;
+  font-size: .68rem;
+  font-weight: 900;
+  padding: .25rem .45rem;
+  text-align: center;
+}
+
+app-match .limit-grid .limit-used {
+  border-color: #4b5563;
+  color: #64748b;
+  text-decoration: line-through;
+}
+
+app-match .btn-action,
+app-match .btn-danger {
+  background: var(--blue);
+  border: 0;
+  border-radius: 999px;
+  color: #eff6ff;
+  cursor: pointer;
+  font-weight: 900;
+  padding: .5rem .85rem;
+}
+
+app-match .btn-danger {
+  background: var(--red);
+}
+
+app-match .action-log-title {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  font-size: .78rem;
+  font-weight: 900;
+  justify-content: space-between;
+  width: 100%;
+}
+
+app-match .action-log-title span {
+  color: var(--muted);
+  font-size: .68rem;
+}
+
+app-match .action-log-line {
+  border-top: 1px solid #1d2a40;
+  color: #b6c4d7;
+  font-size: .72rem;
+  padding: .38rem 0;
+}
+
+app-match .hand-tray {
+  background: rgba(13, 17, 23, .96);
+  border-top: 1px solid var(--line);
+  flex-shrink: 0;
+  padding: .65rem 1rem;
+}
+
+app-match .hand-label {
+  color: var(--muted);
+  font-size: .76rem;
+  margin-bottom: .45rem;
+}
+
+app-match .hand-cards {
+  display: flex;
+  gap: .5rem;
+  overflow-x: auto;
+  padding: .15rem 0 .35rem;
+}
+
+app-match .hand-card {
+  background: #131b2a;
+  border: 1px solid #26344d;
+  border-top: 4px solid var(--blue);
+  border-radius: 10px;
+  color: inherit;
+  cursor: grab;
+  display: grid;
+  flex: 0 0 88px;
+  gap: .22rem;
+  min-height: 62px;
+  padding: .5rem;
+  text-align: left;
+  transition: transform .14s ease;
+}
+
+app-match .hand-card:hover,
+app-match .hand-card--selected {
+  border-color: #93c5fd;
+  transform: translateY(-4px);
+}
+
+app-match .hand-card--energy {
+  border-top-color: #22c55e;
+}
+
+app-match .hand-card--trainer {
+  border-top-color: var(--red);
+}
+
+app-match .hand-card--disabled {
+  cursor: not-allowed;
+  opacity: .55;
+}
+
+app-match .cdk-drag-preview {
+  box-shadow: 0 18px 40px rgba(0, 0, 0, .45);
+}
+
+app-match .cdk-drag-placeholder {
+  opacity: .25;
+}
+
+app-match .modal-backdrop {
+  align-items: center;
+  background: rgba(1, 5, 12, .72);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  position: fixed;
+  z-index: 6;
+}
+
+app-match .attack-modal {
+  max-width: 360px;
+  width: calc(100vw - 2rem);
+}
+
+app-match .alert-inline {
+  background: #351818;
+  border: 1px solid #7f1d1d;
+  border-radius: 10px;
+  color: #fecaca;
+  font-size: .72rem;
+  margin: .55rem 0;
+  padding: .45rem .6rem;
+}
+
+app-match .polling-note {
+  color: #31405b;
+  flex-shrink: 0;
+  font-size: .7rem;
+  padding: .32rem;
+  text-align: center;
+}
+
+@media (max-width: 1080px) {
+  app-match .match-layout {
+    grid-template-columns: 1fr;
+  }
+
+  app-match .side-panel {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+    flex-direction: row;
+    max-height: 190px;
+  }
+
+  app-match .context-panel,
+  app-match .action-log {
+    flex: 1 1 0;
+    min-width: 280px;
+    overflow: auto;
+  }
+
+  app-match .field-half {
+    padding: .55rem;
+  }
+}
+
+@media (max-width: 760px) {
+  app-match {
+    overflow: auto;
+  }
+
+  app-match .board-shell {
+    min-height: 100vh;
+  }
+
+  app-match .board-topbar {
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+
+  app-match .match-layout {
+    min-height: 720px;
+  }
+
+  app-match .side-panel {
+    flex-direction: column;
+    max-height: none;
+  }
+
+  app-match .bench-row {
+    gap: .32rem;
+  }
+
+  app-match .bench-slot,
+  app-match .pokemon-card--bench {
+    width: 76px;
+  }
+
+  app-match .pokemon-card--active,
+  app-match .active-empty {
+    width: 132px;
+  }
+}

@@ -81,9 +81,9 @@ public class GameEngineFacade {
             case GameAction.AttachEnergy a     -> handleAttachEnergy(state, a);
             case GameAction.Attack a           -> handleAttack(state, a);
             case GameAction.Pass a             -> handlePass(state);
-            case GameAction.PlayTrainer a      -> ActionResult.ok(); // ENG-12 scope
-            case GameAction.Evolve a           -> ActionResult.ok(); // future sprint
-            case GameAction.Retreat a          -> ActionResult.ok(); // future sprint
+            case GameAction.PlayTrainer a      -> handlePlayTrainer(state, a);
+            case GameAction.Evolve a           -> handleEvolve(state, a);
+            case GameAction.Retreat a          -> handleRetreat(state, a);
         };
     }
 
@@ -239,11 +239,118 @@ public class GameEngineFacade {
             return ActionResult.rejected("attack cancelled (confusion or energy)");
         }
 
+        state.getTurnFlags().setAttackDoneThisTurn(true);
+        List<GameEvent> emittedAttackEvents = new ArrayList<>(lastEvents);
+        List<GameEvent> turnEvents = processBetweenTurns(state);
+        lastEvents = new ArrayList<>();
+        lastEvents.addAll(emittedAttackEvents);
+        lastEvents.addAll(turnEvents);
         return ActionResult.ok();
     }
 
     private ActionResult handlePass(GameState state) {
         state.setTurnPhase(TurnPhase.BETWEEN_TURNS);
+        processBetweenTurns(state);
+        return ActionResult.ok();
+    }
+
+    private ActionResult handlePlayTrainer(GameState state, GameAction.PlayTrainer action) {
+        PlayerState player = state.getCurrentPlayer();
+        Optional<GameCard> trainerOpt = player.getHand().stream()
+                .filter(c -> c.id().equals(action.cardId()))
+                .findFirst();
+
+        if (trainerOpt.isEmpty()) {
+            return ActionResult.rejected("trainer card not in hand");
+        }
+
+        GameCard trainer = trainerOpt.get();
+        if (!"Trainer".equals(trainer.supertype())) {
+            return ActionResult.rejected("card is not a Trainer: " + action.cardId());
+        }
+
+        player.getHand().remove(trainer);
+        player.getDiscardPile().add(trainer);
+        if (trainer.subtypes().contains("Supporter")) {
+            state.getTurnFlags().setSupporterPlayedThisTurn(true);
+        }
+        lastEvents.add(new GameEvent.TrainerPlayed(state.getMatchId(), player.getUserId(), trainer.id()));
+        return ActionResult.ok();
+    }
+
+    private ActionResult handleEvolve(GameState state, GameAction.Evolve action) {
+        PlayerState player = state.getCurrentPlayer();
+        Optional<GameCard> evolutionOpt = player.getHand().stream()
+                .filter(c -> c.id().equals(action.evolutionCardId()))
+                .findFirst();
+
+        if (evolutionOpt.isEmpty()) {
+            return ActionResult.rejected("evolution card not in hand");
+        }
+
+        PokemonInPlay target = findPokemonInPlay(player, action.targetInPlayId());
+        if (target == null) {
+            return ActionResult.rejected("target pokemon not found: " + action.targetInPlayId());
+        }
+        if (target.isJustPlaced()) {
+            return ActionResult.rejected("cannot evolve a pokemon placed this turn");
+        }
+
+        GameCard evolution = evolutionOpt.get();
+        if (!"Pokémon".equals(evolution.supertype()) || evolution.subtypes().contains("Basic")) {
+            return ActionResult.rejected("card is not an evolution pokemon: " + evolution.id());
+        }
+
+        player.getHand().remove(evolution);
+        PokemonInPlay evolved = new PokemonInPlay(evolution);
+        evolved.setDamage(target.getDamage());
+        evolved.getAttachedEnergyIds().addAll(target.getAttachedEnergyIds());
+        evolved.getAttachedTools().addAll(target.getAttachedTools());
+        evolved.clearJustPlaced();
+
+        if (player.getActivePokemon() == target) {
+            player.setActivePokemon(evolved);
+        } else {
+            int index = player.getBench().indexOf(target);
+            player.getBench().set(index, evolved);
+        }
+
+        lastEvents.add(new GameEvent.PokemonEvolved(
+                state.getMatchId(), player.getUserId(), evolution.id(), action.targetInPlayId()));
+        return ActionResult.ok();
+    }
+
+    private ActionResult handleRetreat(GameState state, GameAction.Retreat action) {
+        PlayerState player = state.getCurrentPlayer();
+        PokemonInPlay active = player.getActivePokemon();
+        if (active == null) {
+            return ActionResult.rejected("no active pokemon to retreat");
+        }
+        if (player.getBench().isEmpty()) {
+            return ActionResult.rejected("no benched pokemon to promote");
+        }
+        if (state.getTurnFlags().isRetreatedThisTurn()) {
+            return ActionResult.rejected("already retreated this turn");
+        }
+        if (action.discardedEnergyIds().size() < active.getCard().retreatCost()) {
+            return ActionResult.rejected("not enough energy discarded to retreat");
+        }
+        if (active.getAttachedEnergyIds().size() < action.discardedEnergyIds().size()) {
+            return ActionResult.rejected("cannot discard more energy than attached");
+        }
+
+        for (int i = 0; i < action.discardedEnergyIds().size(); i++) {
+            if (!active.getAttachedEnergyIds().isEmpty()) {
+                active.getAttachedEnergyIds().remove(0);
+            }
+        }
+
+        PokemonInPlay promoted = player.getBench().remove(0);
+        player.getBench().add(active);
+        player.setActivePokemon(promoted);
+        state.getTurnFlags().setRetreatedThisTurn(true);
+        lastEvents.add(new GameEvent.PokemonRetreated(
+                state.getMatchId(), player.getUserId(), active.getCard().id(), promoted.getCard().id()));
         return ActionResult.ok();
     }
 

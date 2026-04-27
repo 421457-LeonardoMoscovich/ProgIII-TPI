@@ -4,8 +4,10 @@ public sealed interface GameEvent permits
     GameEvent.MatchStarted,
     GameEvent.CardDrawn,
     GameEvent.PokemonPlayed,
+    GameEvent.PokemonEvolved,
     GameEvent.EnergyAttached,
     GameEvent.TrainerPlayed,
+    GameEvent.PokemonRetreated,
     GameEvent.AttackDeclared,
     GameEvent.DamageDealt,
     GameEvent.StatusApplied,
@@ -17,8 +19,10 @@ public sealed interface GameEvent permits
     record MatchStarted(String matchId, Long player1Id, Long player2Id, Long firstPlayerId) implements GameEvent {}
     record CardDrawn(String matchId, Long userId, String cardId) implements GameEvent {}
     record PokemonPlayed(String matchId, Long userId, String cardId, boolean toBench) implements GameEvent {}
+    record PokemonEvolved(String matchId, Long userId, String evolutionCardId, String targetCardId) implements GameEvent {}
     record EnergyAttached(String matchId, Long userId, String energyCardId, String targetCardId) implements GameEvent {}
     record TrainerPlayed(String matchId, Long userId, String cardId) implements GameEvent {}
+    record PokemonRetreated(String matchId, Long userId, String retreatedCardId, String promotedCardId) implements GameEvent {}
     record AttackDeclared(String matchId, Long attackerId, String attackName) implements GameEvent {}
     record DamageDealt(String matchId, String attackerCardId, String defenderCardId, int amount) implements GameEvent {}
     record StatusApplied(String matchId, String targetCardId, String status) implements GameEvent {}

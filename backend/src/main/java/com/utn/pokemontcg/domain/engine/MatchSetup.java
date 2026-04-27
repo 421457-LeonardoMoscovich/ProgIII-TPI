@@ -83,6 +83,11 @@ public class MatchSetup {
         int mulliganRounds = 0;
         boolean hasBasic;
 
+        if (!hasBasicPokemon(player.getDeck())) {
+            drawCards(player, HAND_SIZE);
+            return 0;
+        }
+
         do {
             // Return hand to deck on mulligan (skip on first draw)
             if (mulliganRounds > 0) {

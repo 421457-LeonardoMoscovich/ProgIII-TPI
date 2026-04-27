@@ -32,6 +32,17 @@ class GameEngineFacadeTest {
                 0, List.of(), null, null, 0);
     }
 
+    private GameCard trainerCard(String id) {
+        return new GameCard(id, "Potion", "Trainer", List.of("Item"),
+                0, List.of(), null, null, 0);
+    }
+
+    private GameCard stageOnePokemon(String id, String name, int hp) {
+        return new GameCard(id, name, "Pokémon", List.of("Stage 1"), hp,
+                List.of(Map.of("name", "Heavy Hit", "cost", List.of("Colorless"), "damage", "30")),
+                null, null, 1);
+    }
+
     /** 60-card deck: 30 basics + 30 energies. Always has basics for opening hand. */
     private List<GameCard> buildDeck(String prefix) {
         List<GameCard> deck = new ArrayList<>();
@@ -160,6 +171,74 @@ class GameEngineFacadeTest {
 
         assertThat(result.isOk()).isTrue();
         assertThat(defender.getDamage()).isEqualTo(10);
+        assertThat(state.getCurrentPlayer().getUserId()).isEqualTo(2L);
+        assertThat(facade.getLastEvents()).anyMatch(e -> e instanceof GameEvent.TurnEnded);
+    }
+
+    @Test
+    void applyAction_pass_advances_to_next_player() {
+        GameEngineFacade facade = new GameEngineFacade();
+        GameState state = facade.startMatch(1L, buildDeck("p1"), 2L, buildDeck("p2"), SEED);
+
+        ActionResult result = facade.applyAction(state, new GameAction.Pass(1L));
+
+        assertThat(result.isOk()).isTrue();
+        assertThat(state.getCurrentPlayer().getUserId()).isEqualTo(2L);
+        assertThat(facade.getLastEvents()).anyMatch(e -> e instanceof GameEvent.TurnEnded);
+    }
+
+    @Test
+    void applyAction_playTrainer_discards_card_and_emits_event() {
+        GameEngineFacade facade = new GameEngineFacade();
+        GameState state = facade.startMatch(1L, buildDeck("p1"), 2L, buildDeck("p2"), SEED);
+        GameCard trainer = trainerCard("trainer-1");
+        state.getPlayer1().getHand().add(trainer);
+
+        ActionResult result = facade.applyAction(state, new GameAction.PlayTrainer(1L, trainer.id()));
+
+        assertThat(result.isOk()).isTrue();
+        assertThat(state.getPlayer1().getHand()).doesNotContain(trainer);
+        assertThat(state.getPlayer1().getDiscardPile()).contains(trainer);
+        assertThat(facade.getLastEvents()).anyMatch(e -> e instanceof GameEvent.TrainerPlayed);
+    }
+
+    @Test
+    void applyAction_evolve_replaces_target_and_preserves_damage_energy_tools() {
+        GameEngineFacade facade = new GameEngineFacade();
+        GameState state = facade.startMatch(1L, buildDeck("p1"), 2L, buildDeck("p2"), SEED);
+        PokemonInPlay basic = new PokemonInPlay(basicPokemon("basic-1", "Basic", 60));
+        basic.clearJustPlaced();
+        basic.addDamage(20);
+        basic.getAttachedEnergyIds().add("Colorless");
+        state.getPlayer1().setActivePokemon(basic);
+        GameCard evolution = stageOnePokemon("stage-1", "Stage", 90);
+        state.getPlayer1().getHand().add(evolution);
+
+        ActionResult result = facade.applyAction(state, new GameAction.Evolve(1L, evolution.id(), basic.getCard().id()));
+
+        assertThat(result.isOk()).isTrue();
+        assertThat(state.getPlayer1().getActivePokemon().getCard().id()).isEqualTo(evolution.id());
+        assertThat(state.getPlayer1().getActivePokemon().getDamage()).isEqualTo(20);
+        assertThat(state.getPlayer1().getActivePokemon().getAttachedEnergyIds()).containsExactly("Colorless");
+        assertThat(facade.getLastEvents()).anyMatch(e -> e instanceof GameEvent.PokemonEvolved);
+    }
+
+    @Test
+    void applyAction_retreat_promotes_first_bench_and_emits_event() {
+        GameEngineFacade facade = new GameEngineFacade();
+        GameState state = facade.startMatch(1L, buildDeck("p1"), 2L, buildDeck("p2"), SEED);
+        PokemonInPlay active = new PokemonInPlay(basicPokemon("active-retreat", "Active", 60));
+        active.getAttachedEnergyIds().add("Colorless");
+        PokemonInPlay bench = new PokemonInPlay(basicPokemon("bench-promote", "Bench", 60));
+        state.getPlayer1().setActivePokemon(active);
+        state.getPlayer1().getBench().add(bench);
+
+        ActionResult result = facade.applyAction(state, new GameAction.Retreat(1L, List.of("energy-1")));
+
+        assertThat(result.isOk()).isTrue();
+        assertThat(state.getPlayer1().getActivePokemon().getCard().id()).isEqualTo("bench-promote");
+        assertThat(state.getPlayer1().getBench()).contains(active);
+        assertThat(facade.getLastEvents()).anyMatch(e -> e instanceof GameEvent.PokemonRetreated);
     }
 
     // ════════════════════════════════════════════════════════════════════════

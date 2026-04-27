@@ -38,3 +38,15 @@ yarn-error.log*
 # ===== Test / coverage =====
 jacoco.exec
 **/site/jacoco/
+
+# Codex local configuration
+.codex/
+
+# Claude Flow runtime data
+.claude-flow/data/
+.claude-flow/logs/
+
+# Environment variables
+.env
+.env.local
+.env.*.local

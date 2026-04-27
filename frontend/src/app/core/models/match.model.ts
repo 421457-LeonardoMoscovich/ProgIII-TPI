@@ -26,17 +26,22 @@ export interface MatchSummary {
 
 // A single Pokémon on the field (filtered DTO from server)
 export interface FieldPokemon {
+  id: string;
   name: string;
   hp: number;
   maxHp: number;
+  damage: number;
+  retreatCost: number;
   energies: Record<string, number>;
+  tools: string[];
   statusCondition: string | null;
-  attacks: Array<{ name: string; damage: string }>;
+  attacks: Array<{ name: string; cost: string[]; damage: string; text: string }>;
 }
 
 // Filtered state DTO from GET /api/matches/{id}/state
 export interface FilteredGameStateDto {
   matchId: number;
+  myPlayerId: number;
   turnNumber: number;
   currentPlayerId: number;
   phase: 'DRAW' | 'MAIN' | 'ATTACK' | 'BETWEEN_TURNS';
@@ -46,10 +51,26 @@ export interface FilteredGameStateDto {
   opponentHandCount: number;
   myDeckCount: number;
   opponentDeckCount: number;
+  myDiscardCount: number;
+  opponentDiscardCount: number;
+  energyAttachedThisTurn: boolean;
+  retreatedThisTurn: boolean;
+  attackDoneThisTurn: boolean;
+  supporterPlayedThisTurn: boolean;
   myActive: FieldPokemon | null;
   opponentActive: FieldPokemon | null;
   myBench: FieldPokemon[];
   opponentBench: FieldPokemon[];
   myHand: Array<{ id: string; name: string; type: string; supertype: string }>;
   winner: string | null;
+}
+
+export interface MatchReconnectDto {
+  snapshot: FilteredGameStateDto;
+  recentEvents: Array<{
+    type: string;
+    payload: Record<string, unknown>;
+    sequence: number;
+  }>;
+  currentSequence: number;
 }

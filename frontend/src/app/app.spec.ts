@@ -17,11 +17,11 @@ describe('AppComponent', () => {
     expect(app).toBeTruthy();
   });
 
-  it('should render smoke title', async () => {
+  it('should render router shell only', async () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('xy1 smoke');
+    expect(compiled.textContent?.trim()).toBe('');
   });
 });

@@ -39,7 +39,7 @@
           {{ waitingMatches.length }} esperando · {{ activeMatches.length }} en juego
         </p>
       </div>
-      <button class="btn-game-primary" (click)="openCreate()" [disabled]="decks().length === 0">
+      <button class="btn-game-primary" data-testid="create-match-btn" (click)="openCreate()" [disabled]="decks().length === 0">
         + Crear Partida
       </button>
     </section>
@@ -54,10 +54,10 @@
           <h2 class="section-title"><span class="badge badge-wait">ESPERANDO</span></h2>
           <div class="match-grid">
             @for (m of waitingMatches; track m.id) {
-              <div class="match-card match-card--wait">
+              <div class="match-card match-card--wait" [attr.data-testid]="'waiting-match-' + m.id">
                 <div class="match-host">{{ m.player1Username }}</div>
                 <div class="match-meta">Partida #{{ m.id }}</div>
-                <button class="btn-game-join" (click)="openJoin(m.id)" [disabled]="decks().length === 0">
+                <button class="btn-game-join" [attr.data-testid]="'join-match-btn-' + m.id" (click)="openJoin(m.id)" [disabled]="decks().length === 0">
                   Unirse →
                 </button>
               </div>
@@ -72,10 +72,10 @@
           <h2 class="section-title"><span class="badge badge-active">EN JUEGO</span></h2>
           <div class="match-grid">
             @for (m of activeMatches; track m.id) {
-              <div class="match-card match-card--active">
+              <div class="match-card match-card--active" [attr.data-testid]="'active-match-' + m.id">
                 <div class="match-host">{{ m.player1Username }} vs {{ m.player2Username }}</div>
                 <div class="match-meta">Turno {{ m.turnNumber }}</div>
-                <button class="btn-game-watch" (click)="watchMatch(m.id)">Observar</button>
+                <button class="btn-game-watch" [attr.data-testid]="'watch-match-btn-' + m.id" (click)="watchMatch(m.id)">Observar</button>
               </div>
             }
           </div>
@@ -100,13 +100,13 @@
     <div class="modal" (click)="$event.stopPropagation()">
       <h2 class="modal-title">Crear Partida</h2>
       <label class="modal-label">Elegí tu mazo</label>
-      <select class="modal-select" (change)="selectDeck($event)">
+      <select class="modal-select" data-testid="create-match-deck-select" (change)="selectDeck($event)">
         @for (d of decks(); track d.id) {
           <option [value]="d.id">{{ d.name }}</option>
         }
       </select>
       <div class="modal-actions">
-        <button class="btn-game-primary" (click)="confirmCreate()" [disabled]="creating()">
+        <button class="btn-game-primary" data-testid="confirm-create-match-btn" (click)="confirmCreate()" [disabled]="creating()">
           {{ creating() ? 'Creando...' : 'Crear' }}
         </button>
         <button class="btn-game-secondary" (click)="cancelCreate()">Cancelar</button>
@@ -121,13 +121,13 @@
     <div class="modal" (click)="$event.stopPropagation()">
       <h2 class="modal-title">Unirse a Partida</h2>
       <label class="modal-label">Elegí tu mazo</label>
-      <select class="modal-select" (change)="selectDeck($event)">
+      <select class="modal-select" data-testid="join-match-deck-select" (change)="selectDeck($event)">
         @for (d of decks(); track d.id) {
           <option [value]="d.id">{{ d.name }}</option>
         }
       </select>
       <div class="modal-actions">
-        <button class="btn-game-primary" (click)="confirmJoin()" [disabled]="joining()">
+        <button class="btn-game-primary" data-testid="confirm-join-match-btn" (click)="confirmJoin()" [disabled]="joining()">
           {{ joining() ? 'Uniéndose...' : 'Unirse' }}
         </button>
         <button class="btn-game-secondary" (click)="cancelJoin()">Cancelar</button>

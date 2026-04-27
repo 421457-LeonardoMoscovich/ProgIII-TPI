@@ -1,12 +1,18 @@
-<!-- frontend/src/app/features/match/match.component.html -->
-<div class="board-shell">
-
-  <!-- Top bar -->
+<div class="board-shell" data-testid="match-board" cdkDropListGroup>
   <header class="board-topbar">
-    <button class="btn-back" (click)="goLobby()">← Lobby</button>
-    <span class="board-title">Partida #{{ matchId() }}</span>
-    @if (state()) {
-      <span class="phase-badge">Turno {{ state()!.turnNumber }} · {{ state()!.phase }}</span>
+    <button class="btn-back" (click)="goLobby()">Lobby</button>
+    <div class="title-block">
+      <span class="board-title">Partida #{{ matchId() }}</span>
+      @if (state()) {
+        <span class="phase-badge" data-testid="phase-badge">Turno {{ state()!.turnNumber }} | {{ state()!.phase }}</span>
+      }
+    </div>
+    <span class="turn-pill" data-testid="turn-pill" [class.turn-pill--mine]="canAct()">{{ turnLabel() }}</span>
+    <span class="connection-pill" data-testid="connection-pill" [class]="'connection-pill connection-pill--' + connectionState()">
+      WS {{ connectionState() }}
+    </span>
+    @if (canReconnect()) {
+      <button class="btn-link" data-testid="reconnect-btn" (click)="reconnect()">Reconectar</button>
     }
   </header>
 
@@ -14,137 +20,254 @@
     <div class="alert-error">{{ error() }}</div>
   }
 
+  <div class="toast-stack" aria-live="polite">
+    @for (toast of toasts(); track toast.id) {
+      <button class="toast" [class]="'toast toast--' + toast.kind" (click)="dismissToast(toast.id)">
+        {{ toast.message }}
+      </button>
+    }
+  </div>
+
   @if (loading()) {
     <div class="loading-center">Cargando partida...</div>
   } @else if (state()) {
-
     @let s = state()!;
 
-    <!-- Victory banner -->
     @if (s.winner) {
       <div class="winner-banner">
-        🏆 {{ s.winner === currentUser ? '¡Ganaste!' : s.winner + ' ganó la partida' }}
+        {{ s.winner === currentUsername ? 'Ganaste' : s.winner + ' gano la partida' }}
       </div>
     }
 
-    <div class="board-field">
+    <main class="match-layout">
+      <section class="board-field">
+        <div class="field-half field-opponent">
+          <div class="field-stats">
+            <span class="stat-pill">Premios {{ s.opponentPrizesLeft }}</span>
+            <span class="stat-pill">Mano {{ s.opponentHandCount }}</span>
+            <span class="stat-pill">Mazo {{ s.opponentDeckCount }}</span>
+            <span class="stat-pill">Descarte {{ s.opponentDiscardCount }}</span>
+          </div>
 
-      <!-- ── Opponent half (top) ── -->
-      <section class="field-half field-opponent">
-        <div class="field-stats">
-          <span class="stat-pill">Premios: {{ s.opponentPrizesLeft }}</span>
-          <span class="stat-pill">Mano: {{ s.opponentHandCount }} cartas</span>
-          <span class="stat-pill">Mazo: {{ s.opponentDeckCount }}</span>
-        </div>
-
-        <!-- Opponent bench -->
-        <div class="bench-row bench-row--opponent">
-          @for (p of s.opponentBench; track p.name; let i = $index) {
-            <div class="bench-slot">
-              <div class="pokemon-card pokemon-card--bench">
-                <div class="pokemon-name">{{ p.name }}</div>
-                <div class="hp-bar">
-                  <div class="hp-fill" [class]="hpClass(p)" [style.width.%]="hpPercent(p)"></div>
-                </div>
-                <div class="pokemon-hp">{{ p.hp }}/{{ p.maxHp }}</div>
-              </div>
-            </div>
-          }
-          @for (_ of [].constructor(5 - s.opponentBench.length); track $index) {
-            <div class="bench-slot bench-slot--empty"></div>
-          }
-        </div>
-
-        <!-- Opponent active -->
-        <div class="active-zone">
-          @if (s.opponentActive) {
-            <div class="pokemon-card pokemon-card--active">
-              <div class="pokemon-name">{{ s.opponentActive.name }}</div>
-              @if (s.opponentActive.statusCondition) {
-                <span class="status-badge">{{ s.opponentActive.statusCondition }}</span>
-              }
-              <div class="hp-bar">
-                <div class="hp-fill" [class]="hpClass(s.opponentActive)" [style.width.%]="hpPercent(s.opponentActive)"></div>
-              </div>
-              <div class="pokemon-hp">{{ s.opponentActive.hp }}/{{ s.opponentActive.maxHp }}</div>
-            </div>
-          } @else {
-            <div class="active-empty">Sin Pokémon activo</div>
-          }
-        </div>
-      </section>
-
-      <!-- Divider -->
-      <div class="field-divider"></div>
-
-      <!-- ── Player half (bottom) ── -->
-      <section class="field-half field-player">
-
-        <!-- Player active -->
-        <div class="active-zone">
-          @if (s.myActive) {
-            <div class="pokemon-card pokemon-card--active pokemon-card--mine">
-              <div class="pokemon-name">{{ s.myActive.name }}</div>
-              @if (s.myActive.statusCondition) {
-                <span class="status-badge">{{ s.myActive.statusCondition }}</span>
-              }
-              <div class="hp-bar">
-                <div class="hp-fill" [class]="hpClass(s.myActive)" [style.width.%]="hpPercent(s.myActive)"></div>
-              </div>
-              <div class="pokemon-hp">{{ s.myActive.hp }}/{{ s.myActive.maxHp }}</div>
-              <div class="attack-list">
-                @for (atk of s.myActive.attacks; track atk.name) {
-                  <div class="attack-row">
-                    <span class="attack-name">{{ atk.name }}</span>
-                    <span class="attack-dmg">{{ atk.damage }}</span>
+          <div class="bench-row bench-row--opponent">
+            @for (p of s.opponentBench; track p.id + '-' + $index) {
+              <button class="bench-slot" (click)="selectPokemon(p, 'opponent-bench')">
+                <div class="pokemon-card pokemon-card--bench">
+                  <div class="pokemon-name">{{ p.name }}</div>
+                  <div class="indicator-row">
+                    <span class="energy-chip">E {{ energyTotal(p) }}</span>
+                    @if (damageCounters(p) > 0) { <span class="damage-chip">{{ damageCounters(p) }} dano</span> }
+                    @if (p.tools.length > 0) { <span class="tool-chip">H {{ p.tools.length }}</span> }
+                    @if (p.statusCondition) { <span class="status-badge">{{ p.statusCondition }}</span> }
                   </div>
-                }
-              </div>
-            </div>
-          } @else {
-            <div class="active-empty">Sin Pokémon activo</div>
-          }
-        </div>
-
-        <!-- Player bench -->
-        <div class="bench-row bench-row--player">
-          @for (p of s.myBench; track p.name; let i = $index) {
-            <div class="bench-slot">
-              <div class="pokemon-card pokemon-card--bench pokemon-card--mine">
-                <div class="pokemon-name">{{ p.name }}</div>
-                <div class="hp-bar">
-                  <div class="hp-fill" [class]="hpClass(p)" [style.width.%]="hpPercent(p)"></div>
+                  <div class="hp-bar"><div class="hp-fill" [class]="hpClass(p)" [style.width.%]="hpPercent(p)"></div></div>
+                  <div class="pokemon-hp">{{ p.hp }}/{{ p.maxHp }}</div>
                 </div>
-                <div class="pokemon-hp">{{ p.hp }}/{{ p.maxHp }}</div>
-              </div>
-            </div>
-          }
-          @for (_ of [].constructor(5 - s.myBench.length); track $index) {
-            <div class="bench-slot bench-slot--empty"></div>
-          }
+              </button>
+            }
+            @for (_ of [].constructor(5 - s.opponentBench.length); track $index) {
+              <div class="bench-slot bench-slot--empty"></div>
+            }
+          </div>
+
+          <div class="active-zone" data-testid="opponent-active-zone">
+            @if (s.opponentActive) {
+              <button class="pokemon-card pokemon-card--active" data-testid="opponent-active-card" (click)="selectPokemon(s.opponentActive, 'opponent-active')">
+                <div class="pokemon-name">{{ s.opponentActive.name }}</div>
+                <div class="indicator-row">
+                  <span class="energy-chip">{{ energySummary(s.opponentActive) }}</span>
+                  @if (damageCounters(s.opponentActive) > 0) { <span class="damage-chip">{{ damageCounters(s.opponentActive) }} dano</span> }
+                  @if (s.opponentActive.tools.length > 0) { <span class="tool-chip">H {{ s.opponentActive.tools.length }}</span> }
+                  @if (s.opponentActive.statusCondition) { <span class="status-badge">{{ s.opponentActive.statusCondition }}</span> }
+                </div>
+                <div class="hp-bar"><div class="hp-fill" [class]="hpClass(s.opponentActive)" [style.width.%]="hpPercent(s.opponentActive)"></div></div>
+                <div class="pokemon-hp">{{ s.opponentActive.hp }}/{{ s.opponentActive.maxHp }}</div>
+              </button>
+            } @else {
+              <div class="active-empty">Sin Pokemon activo</div>
+            }
+          </div>
         </div>
 
-        <div class="field-stats">
-          <span class="stat-pill stat-pill--mine">Premios: {{ s.myPrizesLeft }}</span>
-          <span class="stat-pill stat-pill--mine">Mazo: {{ s.myDeckCount }}</span>
+        <div class="field-divider"></div>
+
+        <div class="field-half field-player">
+          <div
+            class="active-zone active-zone--mine"
+            data-testid="my-active-zone"
+            cdkDropList
+            [cdkDropListSortingDisabled]="true"
+            (cdkDropListDropped)="dropHandCard($event.item.data, 'active', s.myActive ?? undefined)">
+            @if (s.myActive) {
+              <div class="pokemon-card pokemon-card--active pokemon-card--mine" data-testid="my-active-card">
+                <button class="card-select" data-testid="my-active-card-select" (click)="selectPokemon(s.myActive, 'my-active')">
+                  <div class="pokemon-name">{{ s.myActive.name }}</div>
+                  <div class="indicator-row">
+                    <span class="energy-chip">{{ energySummary(s.myActive) }}</span>
+                    @if (damageCounters(s.myActive) > 0) { <span class="damage-chip">{{ damageCounters(s.myActive) }} dano</span> }
+                    @if (s.myActive.tools.length > 0) { <span class="tool-chip">H {{ s.myActive.tools.length }}</span> }
+                    @if (s.myActive.statusCondition) { <span class="status-badge">{{ s.myActive.statusCondition }}</span> }
+                  </div>
+                  <div class="hp-bar"><div class="hp-fill" [class]="hpClass(s.myActive)" [style.width.%]="hpPercent(s.myActive)"></div></div>
+                  <div class="pokemon-hp">{{ s.myActive.hp }}/{{ s.myActive.maxHp }}</div>
+                </button>
+                <div class="attack-list">
+                  @for (atk of s.myActive.attacks; track atk.name) {
+                    <button class="attack-row" [disabled]="!canAct()" (click)="openAttackConfirm($index)">
+                      <span class="attack-name">{{ atk.name }}</span>
+                      <span class="attack-cost">{{ atk.cost.join(', ') || 'Sin costo' }}</span>
+                      <span class="attack-dmg">{{ atk.damage || '0' }}</span>
+                    </button>
+                  }
+                </div>
+              </div>
+            } @else {
+              <div class="active-empty">Solta un Pokemon basico para activo</div>
+            }
+          </div>
+
+          <div
+            class="bench-row bench-row--player"
+            data-testid="my-bench-row"
+            cdkDropList
+            [cdkDropListSortingDisabled]="true"
+            (cdkDropListDropped)="dropHandCard($event.item.data, 'bench')">
+            @for (p of s.myBench; track p.id + '-' + $index) {
+              <div
+                class="bench-slot"
+                cdkDropList
+                [cdkDropListSortingDisabled]="true"
+                (cdkDropListDropped)="dropHandCard($event.item.data, 'bench', p)">
+                <button class="pokemon-card pokemon-card--bench pokemon-card--mine" (click)="selectPokemon(p, 'my-bench')">
+                  <div class="pokemon-name">{{ p.name }}</div>
+                  <div class="indicator-row">
+                    <span class="energy-chip">E {{ energyTotal(p) }}</span>
+                    @if (damageCounters(p) > 0) { <span class="damage-chip">{{ damageCounters(p) }} dano</span> }
+                    @if (p.tools.length > 0) { <span class="tool-chip">H {{ p.tools.length }}</span> }
+                    @if (p.statusCondition) { <span class="status-badge">{{ p.statusCondition }}</span> }
+                  </div>
+                  <div class="hp-bar"><div class="hp-fill" [class]="hpClass(p)" [style.width.%]="hpPercent(p)"></div></div>
+                  <div class="pokemon-hp">{{ p.hp }}/{{ p.maxHp }}</div>
+                </button>
+              </div>
+            }
+            @for (_ of [].constructor(5 - s.myBench.length); track $index) {
+              <div class="bench-slot bench-slot--empty"></div>
+            }
+          </div>
+
+          <div class="field-stats">
+            <span class="stat-pill stat-pill--mine">Premios {{ s.myPrizesLeft }}</span>
+            <span class="stat-pill stat-pill--mine">Mazo {{ s.myDeckCount }}</span>
+            <span class="stat-pill stat-pill--mine">Mano {{ s.myHandCount }}</span>
+            <span class="stat-pill stat-pill--mine">Descarte {{ s.myDiscardCount }}</span>
+          </div>
         </div>
       </section>
-    </div>
 
-    <!-- Hand tray -->
+      <aside class="side-panel">
+        <section class="context-panel">
+          <div class="panel-title">Acciones</div>
+          <p class="turn-hint">
+            @if (canAct()) {
+              Selecciona una carta o un Pokemon. Tambien podes arrastrar cartas al campo.
+            } @else {
+              Esperando conexion o turno del rival.
+            }
+          </p>
+          <div class="limit-grid">
+            <span [class.limit-used]="s.energyAttachedThisTurn">Energia</span>
+            <span [class.limit-used]="s.supporterPlayedThisTurn">Partidario</span>
+            <span [class.limit-used]="s.retreatedThisTurn">Retirada</span>
+            <span [class.limit-used]="s.attackDoneThisTurn">Ataque</span>
+          </div>
+          @if (selectedCard()) {
+            <div class="selection-card" [class]="'selection-card selection-card--' + cardKind(selectedCard())">
+              <span>{{ selectedCard()!.name }}</span>
+              <small>{{ selectedCard()!.supertype }} | {{ selectedCard()!.type }}</small>
+            </div>
+            @if (cardKind(selectedCard()) === 'energy' && selectedEnergyTarget()) {
+              <div class="target-hint">Objetivo: {{ selectedEnergyTarget()!.name }}</div>
+            }
+            <button class="btn-action" [disabled]="!canAct()" (click)="playSelectedCard()">Usar carta</button>
+            <button class="btn-secondary" [disabled]="!canAct() || cardKind(selectedCard()) !== 'pokemon' || !selectedPokemon()" (click)="evolveSelected()">Evolucionar</button>
+          } @else {
+            <div class="empty-panel">No hay carta seleccionada.</div>
+          }
+          @if (selectedPokemon()) {
+            <div class="target-card">
+              <strong>{{ selectedPokemon()!.name }}</strong>
+              <span>PS {{ selectedPokemon()!.hp }}/{{ selectedPokemon()!.maxHp }}</span>
+              <span>{{ energySummary(selectedPokemon()) }}</span>
+              <span>{{ toolSummary(selectedPokemon()) }}</span>
+            </div>
+          }
+          <div class="panel-actions">
+            <button class="btn-secondary" data-testid="clear-selection-btn" (click)="clearSelection()">Limpiar</button>
+            <button class="btn-secondary" data-testid="retreat-btn" [disabled]="!canAct() || !s.myActive || s.myBench.length === 0 || energyTotal(s.myActive) < s.myActive.retreatCost" (click)="retreatActive()">Retirar</button>
+            <button class="btn-danger" data-testid="pass-turn-btn" [disabled]="!canAct()" (click)="passTurn()">Finalizar turno</button>
+          </div>
+        </section>
+
+        @if (actionLog().length > 0) {
+          <section class="action-log" data-testid="action-log" [class.action-log--collapsed]="logCollapsed()">
+            <button class="action-log-title" data-testid="toggle-action-log" (click)="toggleLog()">
+              Log de acciones <span>{{ logCollapsed() ? 'mostrar' : 'ocultar' }}</span>
+            </button>
+            @if (!logCollapsed()) {
+              @for (line of actionLog(); track $index) {
+                <div class="action-log-line" data-testid="action-log-line">{{ line }}</div>
+              }
+            }
+          </section>
+        }
+      </aside>
+    </main>
+
     <section class="hand-tray">
       <div class="hand-label">Tu mano ({{ s.myHandCount }} cartas)</div>
-      <div class="hand-cards">
-        @for (card of s.myHand; track card.id) {
-          <div class="hand-card" [class]="'hand-card--' + card.supertype.toLowerCase()">
-            <div class="hand-card-name">{{ card.name }}</div>
-            <div class="hand-card-type">{{ card.type }}</div>
-          </div>
+      <div class="hand-cards" data-testid="my-hand" cdkDropList>
+        @for (card of s.myHand; track card.id + '-' + $index) {
+          <button
+            class="hand-card"
+            cdkDrag
+            [cdkDragData]="card"
+            data-testid="hand-card"
+            [attr.data-card-id]="card.id"
+            [attr.data-card-supertype]="card.supertype"
+            [attr.data-card-type]="card.type"
+            [class.hand-card--selected]="selectedCard()?.id === card.id"
+            [class]="'hand-card hand-card--' + cardKind(card)"
+            [class.hand-card--disabled]="!canAct()"
+            (click)="selectCard(card)">
+            <span class="hand-card-name">{{ card.name }}</span>
+            <span class="hand-card-type">{{ card.type }}</span>
+          </button>
         }
       </div>
     </section>
 
+    @if (pendingAttack()) {
+      <div class="modal-backdrop" (click)="cancelAttack()">
+        <section class="attack-modal" (click)="$event.stopPropagation()">
+          <div class="panel-title">Confirmar ataque</div>
+          <p>{{ pendingAttack()!.name }} causara {{ pendingAttack()!.damage || '0' }} de dano.</p>
+          <p class="modal-note">Costo: {{ pendingAttack()!.cost.join(', ') || 'sin costo' }}</p>
+          @if (pendingAttack()!.text) {
+            <p class="modal-note">{{ pendingAttack()!.text }}</p>
+          }
+          @if (!pendingAttack()!.affordable) {
+            <p class="alert-inline">No hay energia suficiente para este ataque.</p>
+          }
+          <p class="modal-note">El ataque termina tu turno segun las reglas actuales del motor.</p>
+          <div class="panel-actions">
+            <button class="btn-secondary" (click)="cancelAttack()">Cancelar</button>
+            <button class="btn-danger" [disabled]="!canAct() || !pendingAttack()!.affordable" (click)="confirmAttack()">Atacar</button>
+          </div>
+        </section>
+      </div>
+    }
   }
 
-  <footer class="polling-note">Actualizando cada 3s · WebSocket en Sprint 5</footer>
+  <footer class="polling-note">WebSocket en vivo | REST para snapshot inicial y recuperacion</footer>
 </div>

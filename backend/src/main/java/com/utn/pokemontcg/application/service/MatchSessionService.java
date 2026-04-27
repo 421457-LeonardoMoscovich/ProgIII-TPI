@@ -19,7 +19,8 @@ public class MatchSessionService {
 
     // In-memory match metadata for lobby list
     public record MatchMeta(Long id, String status, String player1Username,
-                            String player2Username, String createdAt, int turnNumber) {}
+                            String player2Username, String createdAt, int turnNumber,
+                            Long player1DeckId, Long player2DeckId) {}
 
     private final Map<Long, MatchMeta> matchMeta = new ConcurrentHashMap<>();
     private final AtomicLong idSeq = new AtomicLong(1);
@@ -48,7 +49,7 @@ public class MatchSessionService {
     public Long createMatch(String player1Username, Long deckId) {
         Long id = idSeq.getAndIncrement();
         matchMeta.put(id, new MatchMeta(id, "WAITING", player1Username, null,
-            Instant.now().toString(), 0));
+            Instant.now().toString(), 0, deckId, null));
         return id;
     }
 
@@ -60,11 +61,30 @@ public class MatchSessionService {
         return Optional.ofNullable(matchMeta.get(matchId));
     }
 
+    public boolean isParticipant(Long matchId, String username) {
+        return getMeta(matchId)
+                .map(meta -> isParticipant(username, meta))
+                .orElse(false);
+    }
+
+    public boolean isParticipant(String matchId, String username) {
+        try {
+            return isParticipant(Long.valueOf(matchId), username);
+        } catch (NumberFormatException ex) {
+            return false;
+        }
+    }
+
+    public boolean isParticipant(String username, MatchMeta meta) {
+        return username != null
+                && (username.equals(meta.player1Username()) || username.equals(meta.player2Username()));
+    }
+
     public boolean joinMatch(Long matchId, String player2Username, Long deckId) {
         MatchMeta m = matchMeta.get(matchId);
         if (m == null || !"WAITING".equals(m.status())) return false;
-        matchMeta.put(matchId, new MatchMeta(m.id(), "SETUP", m.player1Username(),
-            player2Username, m.createdAt(), m.turnNumber()));
+        matchMeta.put(matchId, new MatchMeta(m.id(), "ACTIVE", m.player1Username(),
+            player2Username, m.createdAt(), m.turnNumber(), m.player1DeckId(), deckId));
         return true;
     }
 }
