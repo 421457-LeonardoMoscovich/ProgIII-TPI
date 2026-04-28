@@ -162,3 +162,69 @@ docker compose --env-file .env.prod -f config/docker-compose.prod.yml up --build
 4. Sprint 4 - Partida y persistencia
 5. Sprint 5 - Tiempo real y UI del tablero
 6. Sprint 6 - Calidad y entrega
+
+## Demo y Despliegue
+
+### Prerequisitos
+
+- Java 21
+- Node.js 18+
+- PostgreSQL 14+
+- Maven 3.9+ (o usar el Maven Wrapper incluido `./mvnw`)
+
+### Setup inicial
+
+```bash
+git clone <repo-url>
+cd tp-progra-III
+cp .env.example .env
+# Editar .env con tus credenciales de PostgreSQL
+```
+
+### Backend
+
+```bash
+cd backend
+export POSTGRES_URL=jdbc:postgresql://localhost:5432/pokemontcg
+export POSTGRES_USER=<tu_usuario>
+export POSTGRES_PASSWORD=<tu_password>
+export JWT_SECRET=<secreto_jwt_minimo_32_chars>
+./mvnw spring-boot:run
+```
+
+El backend estara disponible en `http://localhost:8080`. En el primer arranque descarga automaticamente el catalogo completo de XY1 (146 cartas) desde pokemontcg.io y lo almacena en cache local.
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+npm start
+```
+
+Frontend disponible en `http://localhost:4200`.
+
+### Credenciales demo
+
+| Usuario | Password | Mazo pre-cargado |
+| --- | --- | --- |
+| `ash@pokemontcg.demo` | `pikachu123` | Equipo Ash (Charizard / Fire-Water) |
+| `misty@pokemontcg.demo` | `pikachu123` | Equipo Misty (Blastoise / Water) |
+
+Los mazos demo usan cartas reales del set XY1 y estan listos para jugar sin configuracion adicional.
+
+### Despliegue productivo (Docker)
+
+```bash
+export POSTGRES_PASSWORD=<password_seguro>
+export JWT_SECRET=<secreto_jwt_minimo_32_chars>
+docker-compose -f docker-compose.prod.yml up --build -d
+```
+
+### URLs utiles
+
+| URL | Descripcion |
+| --- | --- |
+| `http://localhost:8080/actuator/health` | Healthcheck |
+| `http://localhost:8080/swagger-ui.html` | Swagger UI / API docs |
+| `http://localhost:4200` | Frontend Angular |
