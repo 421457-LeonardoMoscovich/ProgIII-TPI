@@ -12,6 +12,12 @@ export interface AckDto {
   sequence: number | null;
 }
 
+export interface ChatMessageDto {
+  sender: string;
+  content: string;
+  timestamp: number;
+}
+
 export type MatchConnectionState = 'disconnected' | 'connecting' | 'connected' | 'reconnecting';
 
 @Injectable({ providedIn: 'root' })
@@ -19,11 +25,13 @@ export class MatchSocketService implements OnDestroy {
   private client: Client | null = null;
   private readonly eventsSubject = new Subject<GameEventDto>();
   private readonly ackSubject = new Subject<AckDto>();
+  private readonly chatSubject = new Subject<ChatMessageDto>();
   private readonly connectionStateSubject = new BehaviorSubject<MatchConnectionState>('disconnected');
   private readonly subscriptions: StompSubscription[] = [];
 
   readonly events$: Observable<GameEventDto> = this.eventsSubject.asObservable();
   readonly acks$: Observable<AckDto> = this.ackSubject.asObservable();
+  readonly chatMessages$: Observable<ChatMessageDto> = this.chatSubject.asObservable();
   readonly connectionState$ = this.connectionStateSubject.asObservable();
 
   connect(matchId: string, token: string, userId: number): void {
@@ -67,6 +75,13 @@ export class MatchSocketService implements OnDestroy {
     });
   }
 
+  sendChatMessage(matchId: string, content: string): void {
+    this.client?.publish({
+      destination: `/app/match/${matchId}/chat`,
+      body: JSON.stringify({ content }),
+    });
+  }
+
   disconnect(): void {
     while (this.subscriptions.length > 0) {
       this.subscriptions.pop()?.unsubscribe();
@@ -80,6 +95,7 @@ export class MatchSocketService implements OnDestroy {
     this.disconnect();
     this.eventsSubject.complete();
     this.ackSubject.complete();
+    this.chatSubject.complete();
     this.connectionStateSubject.complete();
   }
 
@@ -98,6 +114,9 @@ export class MatchSocketService implements OnDestroy {
       }),
       this.client.subscribe('/user/queue/ack', (message: IMessage) => {
         this.ackSubject.next(JSON.parse(message.body) as AckDto);
+      }),
+      this.client.subscribe(`/topic/match/${matchId}/chat`, (message: IMessage) => {
+        this.chatSubject.next(JSON.parse(message.body) as ChatMessageDto);
       }),
     );
   }
