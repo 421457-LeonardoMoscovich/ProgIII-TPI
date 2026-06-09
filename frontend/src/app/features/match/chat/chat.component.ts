@@ -21,14 +21,12 @@ export class ChatComponent implements OnInit {
   inputText = '';
 
   ngOnInit(): void {
-    this.socketService.chatMessages$
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(msg => {
-        this.messages.update(list => {
-          const updated = [...list, msg];
-          return updated.length > 100 ? updated.slice(-100) : updated;
-        });
+    this.socketService.chatMessages$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((msg) => {
+      this.messages.update((list) => {
+        const updated = [...list, msg];
+        return updated.length > 100 ? updated.slice(-100) : updated;
       });
+    });
   }
 
   send(): void {

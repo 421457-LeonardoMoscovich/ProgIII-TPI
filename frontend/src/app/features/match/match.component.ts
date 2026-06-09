@@ -6,15 +6,33 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
 import { MatchService } from '../../core/services/match.service';
 import { AuthService } from '../../core/services/auth.service';
 import { FieldPokemon, FilteredGameStateDto } from '../../core/models/match.model';
-import { GameActionDto, attack, attachEnergy, evolve, pass, playBasic, playTrainer, retreat } from '../../core/models/game-action.model';
+import {
+  GameActionDto,
+  attack,
+  attachEnergy,
+  evolve,
+  pass,
+  playBasic,
+  playTrainer,
+  retreat,
+} from '../../core/models/game-action.model';
 import { GameEventDto } from '../../core/models/game-event.model';
 import { MatchConnectionState, MatchSocketService } from '../../core/services/match-socket.service';
 import { ChatComponent } from './chat/chat.component';
 
 type HandCard = FilteredGameStateDto['myHand'][number];
 type DropTarget = 'active' | 'bench';
-type BoardPokemon = FieldPokemon & { zone: 'my-active' | 'my-bench' | 'opponent-active' | 'opponent-bench' };
-type PendingAttack = { index: number; name: string; cost: string[]; damage: string; text: string; affordable: boolean };
+type BoardPokemon = FieldPokemon & {
+  zone: 'my-active' | 'my-bench' | 'opponent-active' | 'opponent-bench';
+};
+type PendingAttack = {
+  index: number;
+  name: string;
+  cost: string[];
+  damage: string;
+  text: string;
+  affordable: boolean;
+};
 type ToastKind = 'info' | 'success' | 'warning' | 'error';
 type Toast = { id: number; message: string; kind: ToastKind };
 
@@ -47,17 +65,21 @@ export class MatchComponent implements OnInit {
   logCollapsed = signal(false);
   lastEventSequence = signal(0);
 
-  turnLabel = computed(() => this.canAct() ? 'Tu turno' : 'Turno del rival');
+  turnLabel = computed(() => (this.canAct() ? 'Tu turno' : 'Turno del rival'));
   matchIdStr = computed(() => String(this.matchId()));
   selectedEnergyTarget = computed(() => {
     const pokemon = this.selectedPokemon();
     if (pokemon?.zone === 'my-active' || pokemon?.zone === 'my-bench') {
       return pokemon;
     }
-    return this.state()?.myActive ? this.asBoardPokemon(this.state()!.myActive!, 'my-active') : null;
+    return this.state()?.myActive
+      ? this.asBoardPokemon(this.state()!.myActive!, 'my-active')
+      : null;
   });
 
-  get currentUsername() { return this.authService.currentUser(); }
+  get currentUsername() {
+    return this.authService.currentUser();
+  }
 
   ngOnInit() {
     const id = Number(this.route.snapshot.paramMap.get('id'));
@@ -65,7 +87,7 @@ export class MatchComponent implements OnInit {
 
     this.socketService.connectionState$
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(state => {
+      .subscribe((state) => {
         const previous = this.connectionState();
         this.connectionState.set(state);
         if (previous !== state) {
@@ -73,32 +95,28 @@ export class MatchComponent implements OnInit {
         }
       });
 
-    this.socketService.events$
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(event => {
-        this.lastEventSequence.set(Math.max(this.lastEventSequence(), event.sequence));
-        const message = this.describeEvent(event);
-        this.appendLog(message);
-        this.pushToast(message, this.eventToastKind(event));
-        this.handleEventAnimation(event);
-        this.refreshState(id);
-      });
+    this.socketService.events$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((event) => {
+      this.lastEventSequence.set(Math.max(this.lastEventSequence(), event.sequence));
+      const message = this.describeEvent(event);
+      this.appendLog(message);
+      this.pushToast(message, this.eventToastKind(event));
+      this.handleEventAnimation(event);
+      this.refreshState(id);
+    });
 
-    this.socketService.acks$
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(ack => {
-        if (!ack.ok) {
-          this.error.set(ack.reason ?? 'La accion fue rechazada');
-          this.pushToast(ack.reason ?? 'Accion rechazada por el servidor', 'error');
-          return;
-        }
-        this.error.set('');
-        if (ack.sequence !== null) {
-          this.lastEventSequence.set(Math.max(this.lastEventSequence(), ack.sequence));
-        }
-        this.pushToast('Accion confirmada', 'success');
-        this.refreshState(id);
-      });
+    this.socketService.acks$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((ack) => {
+      if (!ack.ok) {
+        this.error.set(ack.reason ?? 'La accion fue rechazada');
+        this.pushToast(ack.reason ?? 'Accion rechazada por el servidor', 'error');
+        return;
+      }
+      this.error.set('');
+      if (ack.sequence !== null) {
+        this.lastEventSequence.set(Math.max(this.lastEventSequence(), ack.sequence));
+      }
+      this.pushToast('Accion confirmada', 'success');
+      this.refreshState(id);
+    });
 
     this.destroyRef.onDestroy(() => this.socketService.disconnect());
     this.loadInitialState(id);
@@ -175,7 +193,10 @@ export class MatchComponent implements OnInit {
 
     if (this.cardSupertype(card) === 'pokemon') {
       const hasActive = this.state()?.myActive !== null;
-      this.sendActionWithToast(playBasic(card.id, hasActive), hasActive ? 'Pokemon enviado a banca' : 'Pokemon enviado al activo');
+      this.sendActionWithToast(
+        playBasic(card.id, hasActive),
+        hasActive ? 'Pokemon enviado a banca' : 'Pokemon enviado al activo',
+      );
       return;
     }
 
@@ -197,11 +218,17 @@ export class MatchComponent implements OnInit {
   dropHandCard(card: HandCard, target: DropTarget, targetPokemon?: FieldPokemon): void {
     if (!this.canAct()) return;
     if (this.cardSupertype(card) === 'pokemon') {
-      this.sendActionWithToast(playBasic(card.id, target === 'bench'), target === 'bench' ? 'Pokemon enviado a banca' : 'Pokemon enviado al activo');
+      this.sendActionWithToast(
+        playBasic(card.id, target === 'bench'),
+        target === 'bench' ? 'Pokemon enviado a banca' : 'Pokemon enviado al activo',
+      );
       return;
     }
     if (this.cardSupertype(card) === 'energy' && targetPokemon) {
-      this.sendActionWithToast(attachEnergy(card.id, targetPokemon.id), `Energia unida a ${targetPokemon.name}`);
+      this.sendActionWithToast(
+        attachEnergy(card.id, targetPokemon.id),
+        `Energia unida a ${targetPokemon.name}`,
+      );
     }
   }
 
@@ -231,7 +258,10 @@ export class MatchComponent implements OnInit {
     const card = this.selectedCard();
     const target = this.selectedPokemon();
     if (!card || !target || !this.canAct()) return;
-    if (this.cardSupertype(card) !== 'pokemon' || target.zone !== 'my-active' && target.zone !== 'my-bench') {
+    if (
+      this.cardSupertype(card) !== 'pokemon' ||
+      (target.zone !== 'my-active' && target.zone !== 'my-bench')
+    ) {
       this.pushToast('Selecciona una evolucion y un Pokemon propio objetivo', 'warning');
       return;
     }
@@ -267,13 +297,16 @@ export class MatchComponent implements OnInit {
     const state = this.state();
     if (!state) return;
     this.connectSocket(state);
-    this.matchService.reconnect(this.matchId(), this.lastEventSequence())
+    this.matchService
+      .reconnect(this.matchId(), this.lastEventSequence())
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: reconnectState => {
+        next: (reconnectState) => {
           this.state.set(reconnectState.snapshot);
-          this.lastEventSequence.set(Math.max(this.lastEventSequence(), reconnectState.currentSequence));
-          reconnectState.recentEvents.forEach(event => {
+          this.lastEventSequence.set(
+            Math.max(this.lastEventSequence(), reconnectState.currentSequence),
+          );
+          reconnectState.recentEvents.forEach((event) => {
             this.lastEventSequence.set(Math.max(this.lastEventSequence(), event.sequence));
             const message = this.describeEvent(event as GameEventDto);
             this.appendLog(message);
@@ -285,14 +318,16 @@ export class MatchComponent implements OnInit {
   }
 
   toggleLog(): void {
-    this.logCollapsed.update(value => !value);
+    this.logCollapsed.update((value) => !value);
   }
 
   dismissToast(id: number): void {
-    this.toasts.update(items => items.filter(item => item.id !== id));
+    this.toasts.update((items) => items.filter((item) => item.id !== id));
   }
 
-  goLobby() { this.router.navigate(['/lobby']); }
+  goLobby() {
+    this.router.navigate(['/lobby']);
+  }
 
   private handleEventAnimation(event: GameEventDto): void {
     switch (event.type) {
@@ -316,7 +351,8 @@ export class MatchComponent implements OnInit {
   }
 
   private loadInitialState(matchId: number): void {
-    this.matchService.getState(matchId)
+    this.matchService
+      .getState(matchId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (state) => {
@@ -332,10 +368,11 @@ export class MatchComponent implements OnInit {
   }
 
   private refreshState(matchId: number): void {
-    this.matchService.getState(matchId)
+    this.matchService
+      .getState(matchId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: state => this.state.set(state),
+        next: (state) => this.state.set(state),
         error: () => this.error.set('Error al actualizar estado de partida'),
       });
   }
@@ -364,7 +401,10 @@ export class MatchComponent implements OnInit {
   }
 
   private cardSupertype(card: HandCard): 'pokemon' | 'energy' | 'trainer' | 'other' {
-    const normalized = card.supertype.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    const normalized = card.supertype
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase();
     if (normalized.startsWith('pok')) return 'pokemon';
     if (normalized === 'energy') return 'energy';
     if (normalized === 'trainer') return 'trainer';
@@ -373,21 +413,36 @@ export class MatchComponent implements OnInit {
 
   private describeEvent(event: GameEventDto): string {
     switch (event.type) {
-      case 'MatchStarted': return 'Partida iniciada';
-      case 'CardDrawn': return 'Carta robada';
-      case 'PokemonPlayed': return 'Pokemon jugado';
-      case 'PokemonEvolved': return 'Pokemon evolucionado';
-      case 'EnergyAttached': return 'Energia unida';
-      case 'TrainerPlayed': return 'Entrenador jugado';
-      case 'PokemonRetreated': return 'Pokemon retirado';
-      case 'AttackDeclared': return `Ataque: ${String(event.payload['attackName'] ?? '')}`;
-      case 'DamageDealt': return `Dano infligido: ${String(event.payload['amount'] ?? '')}`;
-      case 'StatusApplied': return `Estado aplicado: ${String(event.payload['status'] ?? '')}`;
-      case 'PokemonKnockedOut': return 'Pokemon fuera de combate';
-      case 'PrizeTaken': return 'Carta de premio tomada';
-      case 'TurnEnded': return 'Turno finalizado';
-      case 'MatchFinished': return 'Partida finalizada';
-      default: return event.type;
+      case 'MatchStarted':
+        return 'Partida iniciada';
+      case 'CardDrawn':
+        return 'Carta robada';
+      case 'PokemonPlayed':
+        return 'Pokemon jugado';
+      case 'PokemonEvolved':
+        return 'Pokemon evolucionado';
+      case 'EnergyAttached':
+        return 'Energia unida';
+      case 'TrainerPlayed':
+        return 'Entrenador jugado';
+      case 'PokemonRetreated':
+        return 'Pokemon retirado';
+      case 'AttackDeclared':
+        return `Ataque: ${String(event.payload['attackName'] ?? '')}`;
+      case 'DamageDealt':
+        return `Dano infligido: ${String(event.payload['amount'] ?? '')}`;
+      case 'StatusApplied':
+        return `Estado aplicado: ${String(event.payload['status'] ?? '')}`;
+      case 'PokemonKnockedOut':
+        return 'Pokemon fuera de combate';
+      case 'PrizeTaken':
+        return 'Carta de premio tomada';
+      case 'TurnEnded':
+        return 'Turno finalizado';
+      case 'MatchFinished':
+        return 'Partida finalizada';
+      default:
+        return event.type;
     }
   }
 
@@ -399,7 +454,10 @@ export class MatchComponent implements OnInit {
 
   private handleConnectionToast(previous: MatchConnectionState, next: MatchConnectionState): void {
     if (next === 'connected') {
-      this.pushToast(previous === 'disconnected' ? 'Conexion WebSocket establecida' : 'Reconectado a la partida', 'success');
+      this.pushToast(
+        previous === 'disconnected' ? 'Conexion WebSocket establecida' : 'Reconectado a la partida',
+        'success',
+      );
     }
     if (next === 'reconnecting') {
       this.pushToast('Conexion perdida. Reintentando...', 'warning');
@@ -408,11 +466,11 @@ export class MatchComponent implements OnInit {
 
   private pushToast(message: string, kind: ToastKind): void {
     const toast = { id: ++this.toastId, message, kind };
-    this.toasts.update(items => [...items.slice(-3), toast]);
+    this.toasts.update((items) => [...items.slice(-3), toast]);
     window.setTimeout(() => this.dismissToast(toast.id), 4_000);
   }
 
   private appendLog(message: string): void {
-    this.actionLog.update(items => [...items.slice(-29), message]);
+    this.actionLog.update((items) => [...items.slice(-29), message]);
   }
 }

@@ -26,7 +26,9 @@ export class MatchSocketService implements OnDestroy {
   private readonly eventsSubject = new Subject<GameEventDto>();
   private readonly ackSubject = new Subject<AckDto>();
   private readonly chatSubject = new Subject<ChatMessageDto>();
-  private readonly connectionStateSubject = new BehaviorSubject<MatchConnectionState>('disconnected');
+  private readonly connectionStateSubject = new BehaviorSubject<MatchConnectionState>(
+    'disconnected',
+  );
   private readonly subscriptions: StompSubscription[] = [];
 
   readonly events$: Observable<GameEventDto> = this.eventsSubject.asObservable();
@@ -52,10 +54,11 @@ export class MatchSocketService implements OnDestroy {
         this.subscribe(matchId, userId);
       },
       onDisconnect: () => this.connectionStateSubject.next('disconnected'),
-      onStompError: (frame) => console.error(
-        '[match-ws] broker error',
-        JSON.stringify({ headers: frame.headers, body: frame.body }),
-      ),
+      onStompError: (frame) =>
+        console.error(
+          '[match-ws] broker error',
+          JSON.stringify({ headers: frame.headers, body: frame.body }),
+        ),
       onWebSocketClose: () => {
         if (this.client?.active) {
           this.connectionStateSubject.next('reconnecting');

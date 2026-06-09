@@ -28,11 +28,18 @@ export class RankingComponent implements OnInit {
   error = signal('');
 
   ngOnInit(): void {
-    this.http.get<RankingEntryDto[]>(`${environment.apiBaseUrl}/ranking`)
+    this.http
+      .get<RankingEntryDto[]>(`${environment.apiBaseUrl}/ranking`)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: data => { this.ranking.set(data); this.loading.set(false); },
-        error: () => { this.error.set('Error al cargar el ranking'); this.loading.set(false); },
+        next: (data) => {
+          this.ranking.set(data);
+          this.loading.set(false);
+        },
+        error: () => {
+          this.error.set('Error al cargar el ranking');
+          this.loading.set(false);
+        },
       });
   }
 }
