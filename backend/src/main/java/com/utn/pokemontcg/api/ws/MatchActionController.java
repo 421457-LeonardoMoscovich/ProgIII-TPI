@@ -5,6 +5,7 @@ import com.utn.pokemontcg.api.dto.ws.GameActionDto;
 import com.utn.pokemontcg.application.service.MatchSessionService;
 import com.utn.pokemontcg.domain.engine.ActionResult;
 import com.utn.pokemontcg.domain.engine.action.GameAction;
+import com.utn.pokemontcg.domain.engine.event.GameEvent;
 import com.utn.pokemontcg.domain.engine.model.GameState;
 import com.utn.pokemontcg.infrastructure.persistence.UserRepository;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -80,12 +81,30 @@ public class MatchActionController {
             return;
         }
 
+        List<GameEvent> lastEvents = engine.getLastEvents();
         long sequence = eventPublisher.publish(
                 matchId,
                 state.getPlayer1().getUserId(),
                 state.getPlayer2().getUserId(),
-                engine.getLastEvents());
+                lastEvents);
         ack(principal, AckDto.success(sequence));
+
+        lastEvents.stream()
+                .filter(e -> e instanceof GameEvent.MatchFinished)
+                .map(e -> (GameEvent.MatchFinished) e)
+                .findFirst()
+                .ifPresent(finished -> {
+                    try {
+                        Long matchLongId = Long.parseLong(matchId);
+                        matchSessionService.getMeta(matchLongId).ifPresent(meta -> {
+                            Long p1Id = state.getPlayer1().getUserId();
+                            String winnerUsername = finished.winnerUserId().equals(p1Id)
+                                    ? meta.player1Username()
+                                    : meta.player2Username();
+                            matchSessionService.recordMatchResult(matchLongId, winnerUsername);
+                        });
+                    } catch (NumberFormatException ignored) {}
+                });
     }
 
     private void ack(Principal principal, AckDto ack) {

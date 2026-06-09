@@ -36,6 +36,12 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/match/match.component').then(m => m.MatchComponent),
   },
+  {
+    path: 'ranking',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/ranking/ranking.component').then(m => m.RankingComponent),
+  },
   { path: '', redirectTo: '/lobby', pathMatch: 'full' },
   { path: '**', redirectTo: '/login' },
 ];

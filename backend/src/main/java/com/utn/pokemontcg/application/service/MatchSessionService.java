@@ -23,6 +23,7 @@ public class MatchSessionService {
                             Long player1DeckId, Long player2DeckId) {}
 
     private final Map<Long, MatchMeta> matchMeta = new ConcurrentHashMap<>();
+    private final Map<Long, String> matchWinners = new ConcurrentHashMap<>();
     private final AtomicLong idSeq = new AtomicLong(1);
 
     public GameState startSession(String matchId, Long p1Id, Long p2Id,
@@ -86,5 +87,18 @@ public class MatchSessionService {
         matchMeta.put(matchId, new MatchMeta(m.id(), "ACTIVE", m.player1Username(),
             player2Username, m.createdAt(), m.turnNumber(), m.player1DeckId(), deckId));
         return true;
+    }
+
+    public void recordMatchResult(Long matchId, String winnerUsername) {
+        matchWinners.put(matchId, winnerUsername);
+        MatchMeta m = matchMeta.get(matchId);
+        if (m != null) {
+            matchMeta.put(matchId, new MatchMeta(m.id(), "FINISHED", m.player1Username(),
+                m.player2Username(), m.createdAt(), m.turnNumber(), m.player1DeckId(), m.player2DeckId()));
+        }
+    }
+
+    public java.util.Optional<String> getWinnerUsername(Long matchId) {
+        return java.util.Optional.ofNullable(matchWinners.get(matchId));
     }
 }

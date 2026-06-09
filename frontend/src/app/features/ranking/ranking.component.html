@@ -1,0 +1,37 @@
+<div class="ranking-page">
+  <div style="margin-bottom:1rem">
+    <a [routerLink]="['/lobby']" style="color:#94a3b8;font-size:.85rem">← Volver al Lobby</a>
+  </div>
+  <h2>Ranking de Jugadores</h2>
+
+  @if (loading()) {
+    <p>Cargando ranking...</p>
+  } @else if (error()) {
+    <p style="color:#f87171">{{ error() }}</p>
+  } @else if (ranking().length === 0) {
+    <p style="color:#94a3b8">Aún no hay partidas finalizadas.</p>
+  } @else {
+    <table class="ranking-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Jugador</th>
+          <th>V</th>
+          <th>D</th>
+          <th>Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (e of ranking(); track e.username) {
+          <tr>
+            <td>{{ e.rank }}</td>
+            <td>{{ e.username }}</td>
+            <td>{{ e.wins }}</td>
+            <td>{{ e.losses }}</td>
+            <td>{{ e.totalGames }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>
