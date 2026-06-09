@@ -5,7 +5,7 @@ type CardDto = { id: string; supertype: string; subtypes: string[] };
 type DeckDto = { id: number; name: string; isValid: boolean };
 type MatchDto = { id: number };
 
-const API_BASE = 'http://localhost:8080/';
+const API_BASE = 'http://localhost:8081/';
 
 test.describe.configure({ mode: 'serial' });
 

@@ -17,7 +17,7 @@ export default defineConfig({
     {
       command: '.\\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=test" "-Dspring-boot.run.useTestClasspath=true"',
       cwd: '../backend',
-      url: 'http://localhost:8080/actuator/health',
+      url: 'http://localhost:8081/actuator/health',
       reuseExistingServer: true,
       timeout: 120_000,
     },

@@ -1,5 +1,6 @@
-import { Component, inject, signal, OnInit, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Component, inject, signal, OnInit, DestroyRef } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { interval } from 'rxjs';
 import { switchMap, startWith } from 'rxjs/operators';
@@ -51,7 +52,7 @@ export class LobbyComponent implements OnInit {
   ngOnInit() {
     this.deckService.list().subscribe({
       next: (decks) => this.decks.set(decks.filter(d => d.isValid)),
-      error: () => this.error.set('Error al cargar mazos'),
+      error: (e: HttpErrorResponse) => this.error.set(this.describeError(e, '/api/decks')),
     });
 
     interval(3000).pipe(
@@ -77,7 +78,10 @@ export class LobbyComponent implements OnInit {
     this.creating.set(true);
     this.matchService.create(deckId).subscribe({
       next: (res) => { this.showCreateModal.set(false); this.creating.set(false); this.router.navigate(['/match', res.id]); },
-      error: () => { this.error.set('Error al crear partida'); this.creating.set(false); },
+      error: (e: HttpErrorResponse) => {
+        this.error.set(this.describeError(e, '/api/matches'));
+        this.creating.set(false);
+      },
     });
   }
 
@@ -96,7 +100,10 @@ export class LobbyComponent implements OnInit {
     this.joining.set(true);
     this.matchService.join(matchId, deckId).subscribe({
       next: () => { this.showJoinModal.set(false); this.joining.set(false); this.router.navigate(['/match', matchId]); },
-      error: () => { this.error.set('Error al unirse a la partida'); this.joining.set(false); },
+      error: (e: HttpErrorResponse) => {
+        this.error.set(this.describeError(e, `/api/matches/${matchId}/join`));
+        this.joining.set(false);
+      },
     });
   }
 
@@ -109,4 +116,12 @@ export class LobbyComponent implements OnInit {
   }
 
   logout() { this.authService.logout(); }
+
+  private describeError(error: HttpErrorResponse, endpoint: string) {
+    const details = (error.error && typeof error.error === 'object')
+      ? error.error.message ?? error.error.error
+      : null;
+    const suffix = details ? `: ${details}` : '';
+    return `Error ${error.status || 'HTTP'} en ${endpoint}${suffix}`;
+  }
 }

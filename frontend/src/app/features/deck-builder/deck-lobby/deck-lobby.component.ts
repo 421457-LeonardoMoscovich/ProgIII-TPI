@@ -1,6 +1,7 @@
+import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
 import { DeckService } from '../../../core/services/deck.service';
 import { Deck } from '../../../core/models/deck.model';
 
@@ -28,7 +29,10 @@ export class DeckLobbyComponent implements OnInit {
     this.loading.set(true);
     this.deckService.list().subscribe({
       next: (decks) => { this.decks.set(decks); this.loading.set(false); },
-      error: () => { this.error.set('Error al cargar mazos'); this.loading.set(false); },
+      error: (e: HttpErrorResponse) => {
+        this.error.set(this.describeError(e, '/api/decks'));
+        this.loading.set(false);
+      },
     });
   }
 
@@ -40,7 +44,7 @@ export class DeckLobbyComponent implements OnInit {
     if (!name) return;
     this.deckService.create(name).subscribe({
       next: (deck) => this.router.navigate(['/decks', deck.id]),
-      error: () => this.error.set('Error al crear mazo'),
+      error: (e: HttpErrorResponse) => this.error.set(this.describeError(e, '/api/decks')),
     });
   }
 
@@ -60,5 +64,13 @@ export class DeckLobbyComponent implements OnInit {
 
   updateName(event: Event) {
     this.creatingName.set((event.target as HTMLInputElement).value);
+  }
+
+  private describeError(error: HttpErrorResponse, endpoint: string) {
+    const details = (error.error && typeof error.error === 'object')
+      ? error.error.message ?? error.error.error
+      : null;
+    const suffix = details ? `: ${details}` : '';
+    return `Error ${error.status || 'HTTP'} en ${endpoint}${suffix}`;
   }
 }
