@@ -32,6 +32,7 @@ public class User {
         this.username = username;
         this.email = email;
         this.passwordHash = passwordHash;
+        this.updatedAt = OffsetDateTime.now();
     }
 
     public Long getId() { return id; }

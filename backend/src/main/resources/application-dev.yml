@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/pokemontcg
+    url: ${DB_URL:jdbc:postgresql://localhost:55432/pokemontcg}
     username: pokemontcg
     password: pokemontcg
     driver-class-name: org.postgresql.Driver
@@ -11,6 +11,9 @@ spring:
   flyway:
     enabled: true
     baseline-on-migrate: true
+
+server:
+  port: 8081
 
 logging:
   level:
