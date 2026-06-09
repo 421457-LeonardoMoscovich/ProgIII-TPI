@@ -1,18 +1,61 @@
 <div class="auth-container">
-  <h1>Iniciar Sesión</h1>
-  <form [formGroup]="form" (ngSubmit)="submit()">
-    <div class="field">
-      <label>Usuario</label>
-      <input data-testid="login-username" formControlName="username" type="text" placeholder="tu_usuario" />
+  <section class="auth-shell">
+    <div class="auth-hero">
+      <span class="auth-eyebrow">Pokemon TCG TPI</span>
+      <h1>Ingresá al tablero</h1>
+      <p>
+        Armá mazos, creá partidas y jugá en tiempo real desde una sola interfaz.
+      </p>
+      <ul class="auth-features">
+        <li>Deck builder XY1</li>
+        <li>Lobby en vivo</li>
+        <li>Estado de partida sincronizado</li>
+      </ul>
     </div>
-    <div class="field">
-      <label>Contraseña</label>
-      <input formControlName="password" type="password" placeholder="••••••••" />
+
+    <div class="auth-card">
+      <div class="auth-card-header">
+        <p class="auth-kicker">Acceso</p>
+        <h2>Iniciar sesión</h2>
+        <p class="auth-subtitle">Usá tu usuario y contraseña para entrar.</p>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <div class="field">
+          <label for="login-username">Usuario</label>
+          <input
+            id="login-username"
+            data-testid="login-username"
+            formControlName="username"
+            type="text"
+            placeholder="tu_usuario"
+            autocomplete="username"
+          />
+        </div>
+
+        <div class="field">
+          <label for="login-password">Contraseña</label>
+          <input
+            id="login-password"
+            formControlName="password"
+            type="password"
+            placeholder="••••••••"
+            autocomplete="current-password"
+          />
+        </div>
+
+        @if (error) {
+          <p class="error" aria-live="polite">{{ error }}</p>
+        }
+
+        <button data-testid="login-submit" type="submit" [disabled]="form.invalid">
+          Entrar
+        </button>
+      </form>
+
+      <p class="auth-footer">
+        ¿No tenés cuenta? <a routerLink="/register">Registrate</a>
+      </p>
     </div>
-    @if (error) {
-      <p class="error">{{ error }}</p>
-    }
-    <button data-testid="login-submit" type="submit" [disabled]="form.invalid">Entrar</button>
-  </form>
-  <p>¿No tenés cuenta? <a routerLink="/register">Registrate</a></p>
+  </section>
 </div>

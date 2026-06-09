@@ -1,22 +1,69 @@
 <div class="auth-container">
-  <h1>Crear Cuenta</h1>
-  <form [formGroup]="form" (ngSubmit)="submit()">
-    <div class="field">
-      <label>Usuario</label>
-      <input formControlName="username" type="text" placeholder="tu_usuario" />
+  <section class="auth-shell auth-shell--register">
+    <div class="auth-hero">
+      <span class="auth-eyebrow">Pokemon TCG TPI</span>
+      <h1>Armá tu cuenta</h1>
+      <p>
+        Registrate para construir tu colección, guardar mazos y entrar a las partidas.
+      </p>
+      <ul class="auth-features">
+        <li>Registro rápido</li>
+        <li>Deck builder integrado</li>
+        <li>Acceso al lobby y al match</li>
+      </ul>
     </div>
-    <div class="field">
-      <label>Email</label>
-      <input formControlName="email" type="email" placeholder="tu@email.com" />
+
+    <div class="auth-card">
+      <div class="auth-card-header">
+        <p class="auth-kicker">Nuevo jugador</p>
+        <h2>Crear cuenta</h2>
+        <p class="auth-subtitle">Elegí un usuario, un email y una contraseña segura.</p>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <div class="field">
+          <label for="register-username">Usuario</label>
+          <input
+            id="register-username"
+            formControlName="username"
+            type="text"
+            placeholder="tu_usuario"
+            autocomplete="username"
+          />
+        </div>
+
+        <div class="field">
+          <label for="register-email">Email</label>
+          <input
+            id="register-email"
+            formControlName="email"
+            type="email"
+            placeholder="tu@email.com"
+            autocomplete="email"
+          />
+        </div>
+
+        <div class="field">
+          <label for="register-password">Contraseña</label>
+          <input
+            id="register-password"
+            formControlName="password"
+            type="password"
+            placeholder="mínimo 6 caracteres"
+            autocomplete="new-password"
+          />
+        </div>
+
+        @if (error) {
+          <p class="error" aria-live="polite">{{ error }}</p>
+        }
+
+        <button type="submit" [disabled]="form.invalid">Registrarse</button>
+      </form>
+
+      <p class="auth-footer">
+        ¿Ya tenés cuenta? <a routerLink="/login">Iniciá sesión</a>
+      </p>
     </div>
-    <div class="field">
-      <label>Contraseña</label>
-      <input formControlName="password" type="password" placeholder="mínimo 6 caracteres" />
-    </div>
-    @if (error) {
-      <p class="error">{{ error }}</p>
-    }
-    <button type="submit" [disabled]="form.invalid">Registrarse</button>
-  </form>
-  <p>¿Ya tenés cuenta? <a routerLink="/login">Iniciá sesión</a></p>
+  </section>
 </div>

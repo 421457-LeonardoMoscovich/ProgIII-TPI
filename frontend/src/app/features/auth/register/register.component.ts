@@ -1,8 +1,9 @@
+import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
-import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-register',
@@ -25,12 +26,15 @@ export class RegisterComponent {
 
   submit() {
     if (this.form.invalid) return;
+
     const { username, email, password } = this.form.value;
     this.auth.register({ username: username!, email: email!, password: password! }).subscribe({
       next: () => this.router.navigate(['/decks']),
-      error: (e: { status: number }) => (this.error = e.status === 409
-        ? 'El usuario o email ya existe'
-        : 'Error al registrarse'),
+      error: (e: HttpErrorResponse) => {
+        this.error = e.status === 409
+          ? 'El usuario o email ya existe'
+          : `Error al registrarse (${e.status || 'sin código'})`;
+      },
     });
   }
 }

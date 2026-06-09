@@ -1,8 +1,9 @@
+import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
-import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-login',
@@ -24,10 +25,15 @@ export class LoginComponent {
 
   submit() {
     if (this.form.invalid) return;
+
     const { username, password } = this.form.value;
     this.auth.login({ username: username!, password: password! }).subscribe({
       next: () => this.router.navigate(['/decks']),
-      error: () => (this.error = 'Usuario o contraseña incorrectos'),
+      error: (e: HttpErrorResponse) => {
+        this.error = e.status === 401
+          ? 'Usuario o contraseña incorrectos'
+          : `Error al iniciar sesión (${e.status || 'sin código'})`;
+      },
     });
   }
 }
