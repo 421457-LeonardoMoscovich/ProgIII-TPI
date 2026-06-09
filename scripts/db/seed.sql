@@ -1,9 +1,12 @@
 -- Demo users (passwords are BCrypt hashes of "pikachu123")
 INSERT INTO users (username, email, password_hash)
 VALUES
-  ('ash',   'ash@pokemontcg.demo',   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LkDDar7OODG'),
-  ('misty', 'misty@pokemontcg.demo', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LkDDar7OODG')
-ON CONFLICT (username) DO NOTHING;
+  ('ash',   'ash@pokemontcg.demo',   '$2a$10$ATZ46ZQiliPBDDirSt/FmuKmQj014pHWmsjmqzLC5aaxf2RPrCQye'),
+  ('misty', 'misty@pokemontcg.demo', '$2a$10$ATZ46ZQiliPBDDirSt/FmuKmQj014pHWmsjmqzLC5aaxf2RPrCQye')
+ON CONFLICT (username) DO UPDATE
+SET email = EXCLUDED.email,
+    password_hash = EXCLUDED.password_hash,
+    updated_at = NOW();
 
 -- Cards are seeded by the backend catalog bootstrap from pokemontcg.io set xy1.
 -- Run the backend once before loading decks so cards exist in DB.
@@ -13,7 +16,9 @@ ON CONFLICT (username) DO NOTHING;
 -- ============================================================
 INSERT INTO decks (name, user_id)
 SELECT 'Equipo Ash', id FROM users WHERE username = 'ash'
-ON CONFLICT DO NOTHING;
+  AND NOT EXISTS (
+    SELECT 1 FROM decks WHERE name = 'Equipo Ash' AND user_id = users.id
+  );
 
 INSERT INTO deck_cards (deck_id, card_id, quantity)
 SELECT d.id, c.card_id, c.quantity
@@ -36,12 +41,19 @@ CROSS JOIN (VALUES
 WHERE d.name = 'Equipo Ash' AND d.user_id = (SELECT id FROM users WHERE username = 'ash')
 ON CONFLICT (deck_id, card_id) DO UPDATE SET quantity = EXCLUDED.quantity;
 
+UPDATE decks
+SET is_valid = TRUE, updated_at = NOW()
+WHERE name = 'Equipo Ash'
+  AND user_id = (SELECT id FROM users WHERE username = 'ash');
+
 -- ============================================================
 -- Deck: "Equipo Misty" — Blastoise Water (60 cards)
 -- ============================================================
 INSERT INTO decks (name, user_id)
 SELECT 'Equipo Misty', id FROM users WHERE username = 'misty'
-ON CONFLICT DO NOTHING;
+  AND NOT EXISTS (
+    SELECT 1 FROM decks WHERE name = 'Equipo Misty' AND user_id = users.id
+  );
 
 INSERT INTO deck_cards (deck_id, card_id, quantity)
 SELECT d.id, c.card_id, c.quantity
@@ -62,3 +74,8 @@ CROSS JOIN (VALUES
 ) AS c(card_id, quantity)
 WHERE d.name = 'Equipo Misty' AND d.user_id = (SELECT id FROM users WHERE username = 'misty')
 ON CONFLICT (deck_id, card_id) DO UPDATE SET quantity = EXCLUDED.quantity;
+
+UPDATE decks
+SET is_valid = TRUE, updated_at = NOW()
+WHERE name = 'Equipo Misty'
+  AND user_id = (SELECT id FROM users WHERE username = 'misty');

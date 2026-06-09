@@ -65,7 +65,13 @@ cd backend
 ./mvnw spring-boot:run
 ```
 
-Backend disponible en `http://localhost:8080`.
+Backend disponible en `http://localhost:8081`.
+
+En el primer arranque el backend carga el catálogo `xy1` en la base local. Después de ese primer arranque podés cargar usuarios y mazos demo desde la raíz del repo con:
+
+```bash
+psql -h localhost -p 55432 -U pokemontcg -d pokemontcg -f scripts/db/seed.sql
+```
 
 ### 3. Frontend
 
@@ -81,11 +87,11 @@ Frontend disponible en `http://localhost:4200`.
 
 | URL | Descripcion |
 | --- | --- |
-| `http://localhost:8080/actuator/health` | Healthcheck |
-| `http://localhost:8080/swagger-ui.html` | Swagger UI |
-| `http://localhost:8080/v3/api-docs` | OpenAPI JSON |
-| `http://localhost:8080/api/cards?set=xy1` | Catalogo cacheado |
-| `http://localhost:8080/ws` | Endpoint SockJS/STOMP |
+| `http://localhost:8081/actuator/health` | Healthcheck |
+| `http://localhost:8081/swagger-ui.html` | Swagger UI |
+| `http://localhost:8081/v3/api-docs` | OpenAPI JSON |
+| `http://localhost:8081/api/cards?set=xy1` | Catalogo cacheado |
+| `http://localhost:8081/ws` | Endpoint SockJS/STOMP |
 
 ## Arquitectura
 
@@ -185,14 +191,14 @@ cp .env.example .env
 
 ```bash
 cd backend
-export POSTGRES_URL=jdbc:postgresql://localhost:5432/pokemontcg
+export POSTGRES_URL=jdbc:postgresql://localhost:55432/pokemontcg
 export POSTGRES_USER=<tu_usuario>
 export POSTGRES_PASSWORD=<tu_password>
 export JWT_SECRET=<secreto_jwt_minimo_32_chars>
 ./mvnw spring-boot:run
 ```
 
-El backend estara disponible en `http://localhost:8080`. En el primer arranque descarga automaticamente el catalogo completo de XY1 (146 cartas) desde pokemontcg.io y lo almacena en cache local.
+El backend estara disponible en `http://localhost:8081`. En el primer arranque descarga automaticamente el catalogo completo de XY1 (146 cartas) desde pokemontcg.io y lo almacena en cache local.
 
 ### Frontend
 
@@ -206,10 +212,10 @@ Frontend disponible en `http://localhost:4200`.
 
 ### Credenciales demo
 
-| Usuario | Password | Mazo pre-cargado |
-| --- | --- | --- |
-| `ash@pokemontcg.demo` | `pikachu123` | Equipo Ash (Charizard / Fire-Water) |
-| `misty@pokemontcg.demo` | `pikachu123` | Equipo Misty (Blastoise / Water) |
+| Username | Email | Password | Mazo pre-cargado |
+| --- | --- | --- | --- |
+| `ash` | `ash@pokemontcg.demo` | `pikachu123` | Equipo Ash (Charizard / Fire-Water) |
+| `misty` | `misty@pokemontcg.demo` | `pikachu123` | Equipo Misty (Blastoise / Water) |
 
 Los mazos demo usan cartas reales del set XY1 y estan listos para jugar sin configuracion adicional.
 
@@ -225,6 +231,6 @@ docker-compose -f docker-compose.prod.yml up --build -d
 
 | URL | Descripcion |
 | --- | --- |
-| `http://localhost:8080/actuator/health` | Healthcheck |
-| `http://localhost:8080/swagger-ui.html` | Swagger UI / API docs |
+| `http://localhost:8081/actuator/health` | Healthcheck |
+| `http://localhost:8081/swagger-ui.html` | Swagger UI / API docs |
 | `http://localhost:4200` | Frontend Angular |
