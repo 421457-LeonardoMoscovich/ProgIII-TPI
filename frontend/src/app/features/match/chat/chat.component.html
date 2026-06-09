@@ -1,0 +1,19 @@
+<aside class="chat-sidebar">
+  <header class="chat-header">Chat</header>
+  <ul class="chat-messages">
+    @for (m of messages(); track m.timestamp + m.sender) {
+      <li [class.own]="m.sender === username">
+        <span class="chat-sender">{{ m.sender }}</span>
+        <span class="chat-content">{{ m.content }}</span>
+      </li>
+    }
+  </ul>
+  <div class="chat-input">
+    <input
+      [(ngModel)]="inputText"
+      (keyup.enter)="send()"
+      placeholder="Mensaje…"
+      maxlength="200" />
+    <button (click)="send()">Enviar</button>
+  </div>
+</aside>

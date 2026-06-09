@@ -9,6 +9,7 @@ import { FieldPokemon, FilteredGameStateDto } from '../../core/models/match.mode
 import { GameActionDto, attack, attachEnergy, evolve, pass, playBasic, playTrainer, retreat } from '../../core/models/game-action.model';
 import { GameEventDto } from '../../core/models/game-event.model';
 import { MatchConnectionState, MatchSocketService } from '../../core/services/match-socket.service';
+import { ChatComponent } from './chat/chat.component';
 
 type HandCard = FilteredGameStateDto['myHand'][number];
 type DropTarget = 'active' | 'bench';
@@ -20,7 +21,7 @@ type Toast = { id: number; message: string; kind: ToastKind };
 @Component({
   selector: 'app-match',
   standalone: true,
-  imports: [CommonModule, DragDropModule],
+  imports: [CommonModule, DragDropModule, ChatComponent],
   templateUrl: './match.component.html',
   styleUrl: './match.component.scss',
 })
@@ -47,6 +48,7 @@ export class MatchComponent implements OnInit {
   lastEventSequence = signal(0);
 
   turnLabel = computed(() => this.canAct() ? 'Tu turno' : 'Turno del rival');
+  matchIdStr = computed(() => String(this.matchId()));
   selectedEnergyTarget = computed(() => {
     const pokemon = this.selectedPokemon();
     if (pokemon?.zone === 'my-active' || pokemon?.zone === 'my-bench') {
@@ -78,6 +80,7 @@ export class MatchComponent implements OnInit {
         const message = this.describeEvent(event);
         this.appendLog(message);
         this.pushToast(message, this.eventToastKind(event));
+        this.handleEventAnimation(event);
         this.refreshState(id);
       });
 
@@ -290,6 +293,27 @@ export class MatchComponent implements OnInit {
   }
 
   goLobby() { this.router.navigate(['/lobby']); }
+
+  private handleEventAnimation(event: GameEventDto): void {
+    switch (event.type) {
+      case 'DamageDealt':
+        this.triggerAnimation('pokemon-opponent-active', 'damage-flash', 600);
+        break;
+      case 'PokemonEvolved':
+        this.triggerAnimation('pokemon-mine-active', 'evolving', 500);
+        break;
+      case 'PokemonKnockedOut':
+        this.triggerAnimation('pokemon-opponent-active', 'knocking-out', 750);
+        break;
+    }
+  }
+
+  private triggerAnimation(elementId: string, cssClass: string, durationMs = 700): void {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    el.classList.add(cssClass);
+    window.setTimeout(() => el.classList.remove(cssClass), durationMs);
+  }
 
   private loadInitialState(matchId: number): void {
     this.matchService.getState(matchId)

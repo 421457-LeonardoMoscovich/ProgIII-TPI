@@ -964,3 +964,135 @@ app-register .auth-footer a:hover {
     border-radius: 20px;
   }
 }
+
+/* ========== OPT-02: Game animations ========== */
+@keyframes damage-flash {
+  0%   { filter: brightness(1);   transform: scale(1); }
+  20%  { filter: brightness(2.5) saturate(0); transform: scale(1.06); }
+  50%  { filter: brightness(1.8); transform: scale(0.97) translateY(4px); }
+  100% { filter: brightness(1);   transform: scale(1); }
+}
+
+@keyframes evolve-in {
+  0%   { opacity: 0; transform: scale(0.72) rotate(-4deg); }
+  60%  { opacity: 1; transform: scale(1.08) rotate(1deg); }
+  100% { opacity: 1; transform: scale(1)    rotate(0deg); }
+}
+
+@keyframes knockout-out {
+  0%   { opacity: 1; transform: translateY(0) scale(1); }
+  40%  { opacity: 0.6; transform: translateY(4px) scale(0.96); }
+  100% { opacity: 0; transform: translateY(24px) scale(0.82); }
+}
+
+.damage-flash  { animation: damage-flash 0.55s ease-out; }
+.evolving      { animation: evolve-in    0.48s cubic-bezier(.22,.61,.36,1); }
+.knocking-out  { animation: knockout-out 0.7s ease-in forwards; }
+
+/* ========== OPT-03: Chat sidebar ========== */
+.chat-sidebar {
+  background: rgba(15, 23, 42, 0.92);
+  border-left: 1px solid rgba(148, 163, 184, 0.12);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-width: 260px;
+  width: 280px;
+}
+
+.chat-header {
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  font-weight: 600;
+  padding: .75rem 1rem;
+}
+
+.chat-messages {
+  flex: 1;
+  list-style: none;
+  margin: 0;
+  overflow-y: auto;
+  padding: .5rem 1rem;
+}
+
+.chat-messages li         { margin-bottom: .5rem; }
+.chat-messages li.own     { text-align: right; }
+
+.chat-sender {
+  color: #94a3b8;
+  display: block;
+  font-size: .72rem;
+  margin-bottom: .1rem;
+}
+
+.chat-content {
+  background: rgba(51, 65, 85, .7);
+  border-radius: .5rem;
+  display: inline-block;
+  font-size: .85rem;
+  padding: .3rem .6rem;
+}
+
+.chat-messages li.own .chat-content { background: rgba(59, 130, 246, .3); }
+
+.chat-input {
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
+  display: flex;
+  gap: .5rem;
+  padding: .75rem;
+}
+
+.chat-input input {
+  background: rgba(30, 41, 59, .8);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: .375rem;
+  color: inherit;
+  flex: 1;
+  font-size: .85rem;
+  padding: .4rem .6rem;
+}
+
+.chat-input button {
+  background: #3b82f6;
+  border: none;
+  border-radius: .375rem;
+  color: #fff;
+  cursor: pointer;
+  font-size: .85rem;
+  padding: .4rem .8rem;
+}
+
+/* ========== OPT-04: Ranking page ========== */
+.ranking-page {
+  max-width: 640px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.ranking-page h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1.25rem;
+}
+
+.ranking-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.ranking-table th,
+.ranking-table td {
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  padding: .6rem .75rem;
+  text-align: left;
+}
+
+.ranking-table th {
+  color: #94a3b8;
+  font-size: .8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.ranking-table td:first-child { color: #94a3b8; font-size: .85rem; }
+.ranking-table td:nth-child(3) { color: #4ade80; }
+.ranking-table td:nth-child(4) { color: #f87171; }

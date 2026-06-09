@@ -39,7 +39,7 @@
       </div>
     }
 
-    <main class="match-layout">
+    <main class="match-layout" style="display:flex;flex-direction:row;gap:0">
       <section class="board-field">
         <div class="field-half field-opponent">
           <div class="field-stats">
@@ -72,7 +72,7 @@
 
           <div class="active-zone" data-testid="opponent-active-zone">
             @if (s.opponentActive) {
-              <button class="pokemon-card pokemon-card--active" data-testid="opponent-active-card" (click)="selectPokemon(s.opponentActive, 'opponent-active')">
+              <button id="pokemon-opponent-active" class="pokemon-card pokemon-card--active" data-testid="opponent-active-card" (click)="selectPokemon(s.opponentActive, 'opponent-active')">
                 <div class="pokemon-name">{{ s.opponentActive.name }}</div>
                 <div class="indicator-row">
                   <span class="energy-chip">{{ energySummary(s.opponentActive) }}</span>
@@ -99,7 +99,7 @@
             [cdkDropListSortingDisabled]="true"
             (cdkDropListDropped)="dropHandCard($event.item.data, 'active', s.myActive ?? undefined)">
             @if (s.myActive) {
-              <div class="pokemon-card pokemon-card--active pokemon-card--mine" data-testid="my-active-card">
+              <div id="pokemon-mine-active" class="pokemon-card pokemon-card--active pokemon-card--mine" data-testid="my-active-card">
                 <button class="card-select" data-testid="my-active-card-select" (click)="selectPokemon(s.myActive, 'my-active')">
                   <div class="pokemon-name">{{ s.myActive.name }}</div>
                   <div class="indicator-row">
@@ -222,6 +222,7 @@
           </section>
         }
       </aside>
+      <app-chat [matchId]="matchIdStr()" [username]="currentUsername ?? ''"></app-chat>
     </main>
 
     <section class="hand-tray">
